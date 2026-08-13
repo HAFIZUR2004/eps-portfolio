@@ -90,12 +90,32 @@ export default function ContactPage() {
       <div className="max-w-7xl mx-auto">
         
         {/* Top Header */}
-        <div className="flex items-center justify-center gap-2 mb-12">
-          <span className="w-2.5 h-2.5 rounded-full bg-red-500 inline-block"></span>
-          <h1 className="text-2xl md:text-4xl font-extrabold text-gray-900 tracking-tight">
-            Contact Us
-          </h1>
-          <span className="w-2.5 h-2.5 rounded-full bg-emerald-600 inline-block"></span>
+         <div className="mb-10 flex items-center justify-center gap-4">
+
+          {/* Left Decoration */}
+          <div className="relative h-8 w-8 shrink-0">
+
+            {/* Red Circle */}
+            <span className="absolute left-0 top-0 h-7 w-7 rounded-full bg-[#FF3B1D]" />
+
+            {/* Green Overlapping Circle */}
+            <span className="absolute right-0 top-1 z-10 h-5 w-5 rounded-full bg-[#006A4E]" />
+          </div>
+
+          {/* Heading */}
+          <h2 className="whitespace-nowrap text-3xl font-bold tracking-tight text-black md:text-4xl">
+            Contact
+          </h2>
+
+          {/* Right Decoration */}
+          <div className="relative h-8 w-8 shrink-0">
+
+            {/* Green Overlapping Circle */}
+            <span className="absolute left-0 top-1 z-10 h-5 w-5 rounded-full bg-[#006A4E]" />
+
+            {/* Red Circle */}
+            <span className="absolute right-0 top-0 h-7 w-7 rounded-full bg-[#FF3B1D]" />
+          </div>
         </div>
 
         {/* Content Layout */}

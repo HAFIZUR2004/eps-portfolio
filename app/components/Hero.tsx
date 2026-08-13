@@ -5,22 +5,21 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 
-// আপনার আসল ইমেজের পাথ এখানে বসান
 const slides = [
   {
     id: 1,
     title: 'EMERGENCY EVACUATION PLAN',
-    img: '/images/plan-1.jpg', 
+    img: '/evaimg1.png', 
   },
   {
     id: 2,
     title: 'FIRE ALARM ZONE PLAN',
-    img: '/images/plan-2.jpg',
+    img: '/evaimg1.png',
   },
   {
     id: 3,
     title: 'SITE MAP EVACUATION',
-    img: '/images/plan-3.jpg',
+    img: '/evaimg1.png',
   },
 ];
 
@@ -41,11 +40,11 @@ export default function Hero() {
   return (
     <>
       {/* ================= HERO SECTION ================= */}
-      <section className="bg-[#f4f1eb] pt-20 pb-0 px-6 md:px-12 relative overflow-hidden">
-        <div className="max-w-7xl mx-auto flex flex-col lg:flex-row items-center gap-12 lg:gap-20">
+      <section className="bg-[#f4f1eb] pt-16 pb-12 px-6 md:px-12 relative overflow-hidden">
+        <div className="max-w-7xl mx-auto flex flex-col lg:flex-row items-center gap-12 lg:gap-16">
           
           {/* LEFT CONTENT */}
-          <div className="w-full lg:w-1/2 relative z-10 flex flex-col h-full justify-center">
+          <div className="w-full lg:w-1/2 relative z-10 flex flex-col justify-center">
             <p className="text-[#ff5722] font-semibold text-sm mb-2 uppercase tracking-wider">
               Fire safety and evacuation planning specialists
             </p>
@@ -77,12 +76,12 @@ export default function Hero() {
           </div>
 
           {/* RIGHT CONTENT */}
-          <div className="w-full lg:w-1/2 relative mt-10 lg:mt-0 flex flex-col items-center">
+          <div className="w-full lg:w-1/2 relative flex flex-col items-center">
             {/* Main Image with Green Frame */}
             <div className="relative w-full max-w-xl">
-              <div className="absolute -top-4 -right-4 w-[100%] h-[100%] border-[2px] border-[#2e7d32] rounded-xl z-0 bg-transparent pointer-events-none"></div>
+              <div className="absolute -top-3 -right-3 w-full h-full border-[2px] border-[#2e7d32] rounded-xl z-0 bg-transparent pointer-events-none hidden sm:block"></div>
               
-              <div className="relative z-10 bg-white p-2 rounded-xl shadow-2xl w-full overflow-hidden">
+              <div className="relative z-10 bg-white p-2 rounded-xl shadow-xl w-full overflow-hidden border border-gray-200">
                 <div className="w-full aspect-[4/3] relative">
                   <AnimatePresence mode="wait">
                     <motion.div
@@ -90,7 +89,7 @@ export default function Hero() {
                       initial={{ opacity: 0, x: 20 }}
                       animate={{ opacity: 1, x: 0 }}
                       exit={{ opacity: 0, x: -20 }}
-                      transition={{ duration: 0.5 }}
+                      transition={{ duration: 0.4 }}
                       className="absolute inset-0 w-full h-full"
                     >
                       <Image
@@ -99,6 +98,7 @@ export default function Hero() {
                         fill
                         className="object-contain rounded"
                         sizes="(max-width: 768px) 100vw, 50vw"
+                        priority
                       />
                     </motion.div>
                   </AnimatePresence>
@@ -106,24 +106,26 @@ export default function Hero() {
               </div>
             </div>
 
-            {/* Thumbnails & Controls */}
-            <div className="mt-6 w-full max-w-xl flex justify-center items-center gap-4 bg-[#e2dcd3] px-4 py-3 rounded-md shadow-sm">
+            {/* Thumbnails & Controls (Fixed Layout) */}
+            <div className="mt-5 w-full max-w-xl flex justify-between items-center bg-[#e2dcd3] px-4 py-2.5 rounded-md shadow-inner">
               
-              <button onClick={prevSlide} className="text-gray-500 hover:text-black transition p-2">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
+              {/* Prev Button */}
+              <button onClick={prevSlide} className="text-gray-600 hover:text-black transition p-1.5">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-4 h-4">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
                 </svg>
               </button>
 
-              <div className="flex items-center gap-2 mx-2">
+              {/* Thumbnails */}
+              <div className="flex items-center gap-2">
                 {slides.map((slide, index) => (
                   <button
                     key={slide.id}
                     onClick={() => goToSlide(index)}
-                    className={`relative w-14 h-10 rounded border-2 transition-all duration-200 overflow-hidden ${
+                    className={`relative w-12 h-9 rounded border transition-all duration-200 overflow-hidden ${
                       index === currentSlide 
-                        ? 'border-[#ff5722] opacity-100 scale-105 shadow-md' 
-                        : 'border-transparent opacity-60 hover:opacity-100'
+                        ? 'border-[#ff5722] opacity-100 scale-105 shadow-md ring-1 ring-[#ff5722]' 
+                        : 'border-gray-400 opacity-60 hover:opacity-100'
                     }`}
                   >
                     <Image src={slide.img} alt={`Thumb ${index + 1}`} fill className="object-cover" />
@@ -131,53 +133,55 @@ export default function Hero() {
                 ))}
               </div>
 
-              <button onClick={nextSlide} className="text-gray-500 hover:text-black transition p-2">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
+              {/* Next Button */}
+              <button onClick={nextSlide} className="text-gray-600 hover:text-black transition p-1.5">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-4 h-4">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
                 </svg>
               </button>
 
-              <div className="flex items-center text-xs font-mono text-gray-600 ml-1 gap-1">
-                 <span className="font-bold">{`0${currentSlide + 1}`}</span>
+              {/* Counter (Fixed Dynamic Values) */}
+              <div className="flex items-center text-xs font-mono text-gray-700 font-semibold gap-1 bg-white/60 px-2 py-1 rounded">
+                 <span>{`0${currentSlide + 1}`}</span>
                  <span className="text-gray-400">/</span>
                  <span className="text-gray-400">{`0${slides.length}`}</span>
               </div>
+
             </div>
           </div>
         </div>
       </section>
 
-      
-{/* ================= STATS BOX ================= */}
-<div className="max-w-5xl mx-auto px-4">
-  <div className="bg-white rounded-full shadow-lg shadow-black/5 border border-gray-100 py-4 px-6 md:px-12 grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-gray-200/80">
+     {/* ================= STATS BOX ================= */}
+<div className="max-w-4xl mx-auto px-4 -mt-6 relative z-20 -mb-12">
+  <div className="bg-white rounded-full shadow-lg shadow-black/5 border border-gray-100 py-2.5 px-6 md:px-10 grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-gray-200/80 items-center">
     
     {/* 500+ Projects */}
-    <div className="text-center px-4 py-3 sm:py-2">
-      <span className="block text-3xl md:text-4xl font-extrabold text-[#1a1a1a]">
+    <div className="text-center px-3 py-1.5 sm:py-0">
+      <span className="block text-2xl md:text-3xl font-extrabold text-[#1a1a1a] leading-none">
         500+
       </span>
-      <span className="block mt-1 text-xs md:text-sm text-gray-500 font-medium">
+      <span className="block mt-1 text-[11px] md:text-xs text-gray-500 font-medium tracking-wide">
         Projects Completed
       </span>
     </div>
 
     {/* 1000+ Clients */}
-    <div className="text-center px-4 py-3 sm:py-2">
-      <span className="block text-3xl md:text-4xl font-extrabold text-[#1a1a1a]">
+    <div className="text-center px-3 py-1.5 sm:py-0">
+      <span className="block text-2xl md:text-3xl font-extrabold text-[#1a1a1a] leading-none">
         1000+
       </span>
-      <span className="block mt-1 text-xs md:text-sm text-gray-500 font-medium">
+      <span className="block mt-1 text-[11px] md:text-xs text-gray-500 font-medium tracking-wide">
         Clients
       </span>
     </div>
 
     {/* 20+ Countries */}
-    <div className="text-center px-4 py-3 sm:py-2">
-      <span className="block text-3xl md:text-4xl font-extrabold text-[#1a1a1a]">
+    <div className="text-center px-3 py-1.5 sm:py-0">
+      <span className="block text-2xl md:text-3xl font-extrabold text-[#1a1a1a] leading-none">
         20+
       </span>
-      <span className="block mt-1 text-xs md:text-sm text-gray-500 font-medium">
+      <span className="block mt-1 text-[11px] md:text-xs text-gray-500 font-medium tracking-wide">
         Countries
       </span>
     </div>

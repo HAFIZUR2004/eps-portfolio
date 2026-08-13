@@ -23,7 +23,7 @@ const servicesData: ServiceItem[] = [
     price: 50,
     deliveryTime: "Delivery in 1–2 Days",
     badgeText: "ENGLISH LANGUAGE",
-    imageSrc: "/services/evacuation-plan-1.jpg",
+    imageSrc: "/evaimg1.png",
   },
   {
     id: 2,
@@ -34,7 +34,7 @@ const servicesData: ServiceItem[] = [
     price: 50,
     deliveryTime: "Delivery in 1–2 Days",
     badgeText: "ENGLISH LANGUAGE",
-    imageSrc: "/services/evacuation-plan-2.jpg",
+    imageSrc: "/evaimg1.png",
   },
   {
     id: 3,
@@ -45,7 +45,7 @@ const servicesData: ServiceItem[] = [
     price: 50,
     deliveryTime: "Delivery in 1–2 Days",
     badgeText: "ENGLISH LANGUAGE",
-    imageSrc: "/services/evacuation-plan-3.jpg",
+    imageSrc: "/evaimg1.png",
   },
 ];
 

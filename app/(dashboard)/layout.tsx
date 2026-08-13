@@ -1,6 +1,9 @@
+// app/dashboard/layout.tsx
+
 import Link from "next/link";
+import Image from "next/image"; // 👈 Image component import করা হলো
 import { UserButton } from "@clerk/nextjs";
-import { LayoutDashboard, Star, Users, ArrowLeft } from "lucide-react";
+import { LayoutDashboard, Star, Users, Settings, ArrowLeft } from "lucide-react";
 
 export default function DashboardLayout({
   children,
@@ -12,15 +15,17 @@ export default function DashboardLayout({
       {/* Sidebar */}
       <aside className="w-64 bg-slate-900/80 border-r border-slate-800/80 p-5 flex flex-col justify-between backdrop-blur-md">
         <div>
-          {/* Logo / Brand */}
-          <div className="flex items-center gap-3 mb-8 px-2">
-            <div className="w-8 h-8 rounded-lg bg-emerald-500 flex items-center justify-center font-bold text-slate-950">
-              G
-            </div>
-            <span className="font-extrabold text-lg tracking-wider text-white">
-              ADMIN<span className="text-emerald-400">PANEL</span>
-            </span>
-          </div>
+          {/* Logo / Brand - Click to Redirect Home */}
+          <Link href="/" className="flex items-center mb-8 px-2 group">
+            <Image
+              src="/logo2.png" // 👈 ডাইনামিক লোগো URL
+              alt="Dashboard Logo"
+              width={150}
+              height={40}
+              className="object-contain h-10 w-auto group-hover:opacity-90 transition-opacity"
+              priority
+            />
+          </Link>
 
           {/* Navigation Links */}
           <nav className="space-y-2">
@@ -46,6 +51,14 @@ export default function DashboardLayout({
             >
               <Users size={18} />
               User Management
+            </Link>
+
+            <Link
+              href="/dashboard/settings"
+              className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-300 hover:bg-slate-800/60 hover:text-emerald-400 transition-all"
+            >
+              <Settings size={18} />
+              Site Settings
             </Link>
           </nav>
         </div>

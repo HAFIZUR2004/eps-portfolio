@@ -115,11 +115,7 @@ export default function PortfolioPage() {
   return (
     <div className="min-h-screen bg-[#FDFBF7] text-gray-800">
       {/* Top Banner Header */}
-      <header className="bg-[#FAF0E6] py-8 text-center border-b border-orange-100">
-        <h1 className="text-3xl md:text-4xl font-extrabold text-gray-900 tracking-wide">
-          Portfolio
-        </h1>
-      </header>
+      
 
       {/* Main Container */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">

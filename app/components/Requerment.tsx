@@ -4,37 +4,37 @@ import Image from 'next/image';
 const steps = [
   {
     num: "01",
-    color: "bg-purple-100 text-purple-600",
+    color: "bg-[#f3e8ff] text-[#9333ea]",
     title: "Floor Plan",
     desc: "Upload your Floor Plan (PDF/JPG), or Hand Sketch, or Walkthrough Video. The video should start from the main entrance and show the entire building.",
   },
   {
     num: "02",
-    color: "bg-blue-100 text-blue-600",
+    color: "bg-[#dbeafe] text-[#2563eb]",
     title: "Project Details",
     desc: "Provide your Project Address, Google Maps Link, and Building Name (if available).",
   },
   {
     num: "03",
-    color: "bg-orange-100 text-orange-500",
+    color: "bg-[#ffedd5] text-[#f97316]",
     title: "Emergency Information",
     desc: "Share your country's Fire Emergency Number and any additional emergency contact (optional).",
   },
   {
     num: "04",
-    color: "bg-emerald-100 text-emerald-600",
+    color: "bg-[#d1fae5] text-[#059669]",
     title: "Company Logo",
     desc: "Upload your Company Logo (PNG, JPG, SVG, AI, etc.). If you don't have one, you can skip this step.",
   },
   {
     num: "05",
-    color: "bg-rose-100 text-rose-500",
+    color: "bg-[#ffe4e6] text-[#f43f5e]",
     title: "Safety Equipment",
     desc: "Mark the locations of Fire Extinguishers, Fire Alarm, Smoke Detectors, First Aid Kit, Emergency Exits, and Assembly Point + etc.",
   },
   {
     num: "06",
-    color: "bg-amber-100 text-amber-500",
+    color: "bg-[#fef3c7] text-[#d97706]",
     title: "Additional Notes",
     desc: "Tell me about any special instructions, restricted areas, or other requirements for your project.",
   },
@@ -42,90 +42,116 @@ const steps = [
 
 export default function RequirementsSection() {
   return (
-    <section className="bg-slate-50/50 py-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
-      {/* Title */}
-       <div className="mb-10 flex items-center justify-center gap-4">
-
-          {/* Left Decoration */}
-          <div className="relative h-8 w-8 shrink-0">
-
-            {/* Red Circle */}
-            <span className="absolute left-0 top-0 h-7 w-7 rounded-full bg-[#FF3B1D]" />
-
-            {/* Green Overlapping Circle */}
-            <span className="absolute right-0 top-1 z-10 h-5 w-5 rounded-full bg-[#006A4E]" />
-          </div>
-
-          {/* Heading */}
-          <h2 className="whitespace-nowrap text-3xl font-bold tracking-tight text-black md:text-4xl">
-            WHAT I NEED FROM YOU
-          </h2>
-
-          {/* Right Decoration */}
-          <div className="relative h-8 w-8 shrink-0">
-
-            {/* Green Overlapping Circle */}
-            <span className="absolute left-0 top-1 z-10 h-5 w-5 rounded-full bg-[#006A4E]" />
-
-            {/* Red Circle */}
-            <span className="absolute right-0 top-0 h-7 w-7 rounded-full bg-[#FF3B1D]" />
-          </div>
-        </div>
-
-
-      {/* Main Content Grid */}
+    <section className="bg-[#fcfcfc] py-12 px-4 sm:px-6 lg:px-12 max-w-[1400px] mx-auto">
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         
-        {/* Left Column: 6 Steps List */}
-        <div className="lg:col-span-6 space-y-3">
-          {steps.map((step) => (
-            <div 
-              key={step.num}
-              className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex items-center gap-4 hover:shadow-md transition-shadow"
-            >
-              <div className={`px-4 py-3 rounded-lg text-xl font-black ${step.color} shrink-0`}>
-                {step.num}
+        {/* ================= LEFT COLUMN ================= */}
+        <div className="lg:col-span-5 flex flex-col justify-between">
+          
+          {/* Header Section */}
+          <div className="mb-6">
+            {/* Title with Red & Green Dots - Fixed Layout */}
+            <div className="flex items-center gap-3 mb-2">
+              {/* Left Decoration */}
+              <div className="relative h-8 w-8 shrink-0">
+                <span className="absolute left-0 top-0 h-7 w-7 rounded-full bg-[#FF3B1D]" />
+                <span className="absolute right-0 top-1 z-10 h-5 w-5 rounded-full bg-[#006A4E]" />
               </div>
-              <div>
-                <h4 className="text-sm font-bold text-gray-900">{step.title}</h4>
-                <p className="text-xs text-gray-500 mt-0.5 leading-relaxed">
-                  {step.desc}
-                </p>
+
+              {/* Heading */}
+              <h2 className="text-3xl font-bold tracking-tight text-black md:text-4xl">
+                WHAT I NEED FROM YOU
+              </h2>
+
+              {/* Right Decoration */}
+              <div className="relative h-8 w-8 shrink-0">
+                <span className="absolute left-0 top-1 z-10 h-5 w-5 rounded-full bg-[#006A4E]" />
+                <span className="absolute right-0 top-0 h-7 w-7 rounded-full bg-[#FF3B1D]" />
               </div>
             </div>
-          ))}
+
+            {/* Subtitle */}
+            <h3 className="text-base md:text-lg font-bold text-black mt-1">
+              Create Your Fire Evacuation Plan in 6 Simple Steps
+            </h3>
+
+            {/* Paragraph */}
+            <p className="text-xs text-gray-500 mt-2 leading-relaxed max-w-xl">
+              To design an accurate, professional, and code-compliant Fire Evacuation Plan, please provide the following information before we begin.
+            </p>
+          </div>
+
+          {/* 6 Steps Vertical Stack */}
+          <div className="space-y-3">
+            {steps.map((step) => (
+              <div 
+                key={step.num}
+                className="bg-white p-3.5 rounded-2xl border border-gray-100 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)] flex items-center gap-4 transition-all duration-200 hover:shadow-md"
+              >
+                {/* Number Box */}
+                <div className={`w-14 h-14 rounded-xl flex items-center justify-center text-xl font-black ${step.color} shrink-0`}>
+                  {step.num}
+                </div>
+
+                {/* Text Content */}
+                <div className="pr-1">
+                  <h4 className="text-sm font-extrabold text-gray-900 leading-tight">
+                    {step.title}
+                  </h4>
+                  <p className="text-[11px] text-gray-400 mt-1 leading-snug">
+                    {step.desc}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+
         </div>
 
-        {/* Right Column: Plans Gallery Showcase */}
-        <div className="lg:col-span-6 grid grid-cols-2 gap-3 bg-transparent p-1">
-          {/* Column 1 */}
-          <div className="space-y-3">
-            <div className="relative h-44 rounded-lg overflow-hidden border border-gray-200 bg-white shadow-sm transition-transform hover:scale-[1.01]">
-              <Image src="/plans/plan1.png" alt="Fire Alarm Zone Plan" fill className="object-contain p-1" />
+        {/* ================= RIGHT COLUMN (IMAGE GALLERY) ================= */}
+        <div className="lg:col-span-7 grid grid-cols-2 gap-3.5 pt-2">
+          
+          {/* Gallery Column 1 */}
+          <div className="flex flex-col gap-3.5">
+            {/* Plan 1 (Horizontal) */}
+            <div className="relative h-[135px] sm:h-[150px] w-full bg-white rounded-xl border border-gray-200/90 shadow-sm overflow-hidden p-1.5">
+              <Image src="/eva1.jpeg" alt="Fire Alarm Zone Plan 1" fill className="object-contain" />
             </div>
-            <div className="relative h-44 rounded-lg overflow-hidden border border-gray-200 bg-white shadow-sm transition-transform hover:scale-[1.01]">
-              <Image src="/plans/plan2.png" alt="Fire Alarm Zone Plan 2" fill className="object-contain p-1" />
+
+            {/* Plan 2 (Horizontal - Middle) */}
+            <div className="relative h-[160px] sm:h-[180px] w-full bg-white rounded-xl border border-gray-200/90 shadow-sm overflow-hidden p-1.5">
+              <Image src="/eva1.jpeg" alt="Fire Alarm Zone Plan 2" fill className="object-contain" />
             </div>
-            <div className="relative h-44 rounded-lg overflow-hidden border border-gray-200 bg-white shadow-sm transition-transform hover:scale-[1.01]">
-              <Image src="/plans/plan3.png" alt="Fire Alarm Zone Plan 3" fill className="object-contain p-1" />
+
+            {/* Plan 3 (Horizontal - Small) */}
+            <div className="relative h-[125px] sm:h-[140px] w-full bg-white rounded-xl border border-gray-200/90 shadow-sm overflow-hidden p-1.5">
+              <Image src="/eva1.jpeg" alt="Fire Alarm Zone Plan 3" fill className="object-contain" />
             </div>
-            <div className="relative h-56 rounded-lg overflow-hidden border border-gray-200 bg-white shadow-sm transition-transform hover:scale-[1.01]">
-              <Image src="/plans/plan4.png" alt="Emergency Evacuation Plan" fill className="object-contain p-1" />
+
+            {/* Plan 4 (Vertical - Bottom) */}
+            <div className="relative h-[190px] sm:h-[210px] w-full bg-white rounded-xl border border-gray-200/90 shadow-sm overflow-hidden p-1.5">
+              <Image src="/eva1.jpeg" alt="Emergency Evacuation Plan 1" fill className="object-contain" />
             </div>
           </div>
 
-          {/* Column 2 */}
-          <div className="space-y-3">
-            <div className="relative h-56 rounded-lg overflow-hidden border border-gray-200 bg-white shadow-sm transition-transform hover:scale-[1.01]">
-              <Image src="/plans/plan5.png" alt="Emergency Evacuation Plan 2" fill className="object-contain p-1" />
+          {/* Gallery Column 2 */}
+          <div className="flex flex-col gap-3.5">
+            {/* Plan 5 (Horizontal Top Right) */}
+            <div className="relative h-[135px] sm:h-[150px] w-full bg-white rounded-xl border border-gray-200/90 shadow-sm overflow-hidden p-1.5">
+              <Image src="/evaimg1.png" alt="Emergency Evacuation Plan 2" fill className="object-contain" />
             </div>
-            <div className="relative h-64 rounded-lg overflow-hidden border border-gray-200 bg-white shadow-sm transition-transform hover:scale-[1.01]">
-              <Image src="/plans/plan6.png" alt="Emergency Evacuation Plan Vertical" fill className="object-contain p-1" />
+
+            {/* Plan 6 (Large Vertical Plan) */}
+            <div className="relative h-[280px] sm:h-[310px] w-full bg-white rounded-xl border border-gray-200/90 shadow-sm overflow-hidden p-1.5">
+              <Image src="/evaimg1.png" alt="Emergency Evacuation Plan Vertical" fill className="object-contain" />
             </div>
-            <div className="relative h-44 rounded-lg overflow-hidden border border-gray-200 bg-white shadow-sm transition-transform hover:scale-[1.01]">
-              <Image src="/plans/plan7.png" alt="Fire Alarm Zone Plan 4" fill className="object-contain p-1" />
+
+            {/* Plan 7 (Horizontal Bottom Right) */}
+            <div className="relative h-[155px] sm:h-[175px] w-full bg-white rounded-xl border border-gray-200/90 shadow-sm overflow-hidden p-1.5">
+              <Image src="/evaimg1.png" alt="Fire Alarm Zone Plan 4" fill className="object-contain" />
             </div>
           </div>
+
         </div>
 
       </div>
