@@ -1,122 +1,66 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Image from "next/image";
-import { ChevronDown, Check } from "lucide-react";
+import { ChevronDown, Check, Loader2 } from "lucide-react";
 
 interface PortfolioItem {
-  id: number;
+  _id: string;
   title: string;
-  image: string;
+  imageUrl: string;
   category: string;
   orientation: "portrait" | "landscape";
 }
 
-const categories = [
-  { name: "All Categories", count: null },
-  { name: "Fire Evacuation Plan", count: 10 },
-  { name: "Fire Alarm Zone Plan", count: 8 },
-  { name: "Fire Zone Block Plan", count: 5 },
-  { name: "Fire Hydrant Block Plan", count: 3 },
-  { name: "Floor Plan Redesign", count: 20 },
-  { name: "Others", count: 5 },
-];
-
-const portfolioItems: PortfolioItem[] = [
-  {
-    id: 1,
-    title: "Emergency Evacuation Plan 1",
-    image: "https://via.placeholder.com/400x600/006A4E/FFFFFF?text=Evacuation+Plan+1",
-    category: "Fire Evacuation Plan",
-    orientation: "portrait",
-  },
-  {
-    id: 2,
-    title: "Emergency Evacuation Plan 2",
-    image: "https://via.placeholder.com/400x600/006A4E/FFFFFF?text=Evacuation+Plan+2",
-    category: "Fire Evacuation Plan",
-    orientation: "portrait",
-  },
-  {
-    id: 3,
-    title: "Emergency Evacuation Plan 3",
-    image: "https://via.placeholder.com/400x600/006A4E/FFFFFF?text=Evacuation+Plan+3",
-    category: "Fire Evacuation Plan",
-    orientation: "portrait",
-  },
-  {
-    id: 4,
-    title: "Emergency Evacuation Plan 4",
-    image: "https://via.placeholder.com/400x600/006A4E/FFFFFF?text=Evacuation+Plan+4",
-    category: "Fire Evacuation Plan",
-    orientation: "portrait",
-  },
-  {
-    id: 5,
-    title: "Emergency Evacuation Plan Horizontal 1",
-    image: "https://via.placeholder.com/600x400/006A4E/FFFFFF?text=Evacuation+Plan+Landscape",
-    category: "Floor Plan Redesign",
-    orientation: "landscape",
-  },
-  {
-    id: 6,
-    title: "Emergency Evacuation Plan 5",
-    image: "https://via.placeholder.com/400x600/006A4E/FFFFFF?text=Evacuation+Plan+5",
-    category: "Fire Evacuation Plan",
-    orientation: "portrait",
-  },
-  {
-    id: 7,
-    title: "Emergency Evacuation Plan Horizontal 2",
-    image: "https://via.placeholder.com/600x400/006A4E/FFFFFF?text=Evacuation+Plan+Landscape+2",
-    category: "Fire Zone Block Plan",
-    orientation: "landscape",
-  },
-  {
-    id: 8,
-    title: "Emergency Evacuation Plan Horizontal 3",
-    image: "https://via.placeholder.com/600x400/006A4E/FFFFFF?text=Evacuation+Plan+Landscape+3",
-    category: "Fire Alarm Zone Plan",
-    orientation: "landscape",
-  },
-  {
-    id: 9,
-    title: "Emergency Evacuation Plan 6",
-    image: "https://via.placeholder.com/400x600/006A4E/FFFFFF?text=Evacuation+Plan+6",
-    category: "Fire Evacuation Plan",
-    orientation: "portrait",
-  },
-  {
-    id: 10,
-    title: "Emergency Evacuation Plan 7",
-    image: "https://via.placeholder.com/400x600/006A4E/FFFFFF?text=Evacuation+Plan+7",
-    category: "Fire Evacuation Plan",
-    orientation: "portrait",
-  },
-  {
-    id: 11,
-    title: "Emergency Evacuation Plan Horizontal 4",
-    image: "https://via.placeholder.com/600x400/006A4E/FFFFFF?text=Evacuation+Plan+Landscape+4",
-    category: "Floor Plan Redesign",
-    orientation: "landscape",
-  },
-];
-
 export default function PortfolioPage() {
+  const [items, setItems] = useState<PortfolioItem[]>([]);
+  const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState("All Categories");
-  const [isCategoryOpen, setIsCategoryOpen] = useState(true);
+  const [isCategoryOpen, setIsCategoryOpen] = useState(false);
 
-  // Filter Logic
+  // 1. Fetch Dynamic Data from API
+  useEffect(() => {
+    const fetchPortfolioItems = async () => {
+      try {
+        const res = await fetch("/api/portfolio");
+        const data = await res.json();
+        setItems(data.items || []);
+      } catch (error) {
+        console.error("Failed to load portfolio items:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPortfolioItems();
+  }, []);
+
+  // 2. Generate Dynamic Categories with Live Counts
+  const baseCategories = [
+    "Fire Evacuation Plan",
+    "Fire Alarm Zone Plan",
+    "Fire Zone Block Plan",
+    "Fire Hydrant Block Plan",
+    "Floor Plan Redesign",
+    "Others",
+  ];
+
+  const categories = [
+    { name: "All Categories", count: items.length },
+    ...baseCategories.map((cat) => ({
+      name: cat,
+      count: items.filter((item) => item.category === cat).length,
+    })),
+  ];
+
+  // 3. Filter Items based on Selected Category
   const filteredItems =
     selectedCategory === "All Categories"
-      ? portfolioItems
-      : portfolioItems.filter((item) => item.category === selectedCategory);
+      ? items
+      : items.filter((item) => item.category === selectedCategory);
 
   return (
     <div className="min-h-screen bg-[#FDFBF7] text-gray-800">
-      {/* Top Banner Header */}
-      
-
       {/* Main Container */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
         
@@ -129,7 +73,7 @@ export default function PortfolioPage() {
               onClick={() => setIsCategoryOpen(!isCategoryOpen)}
               className="flex items-center gap-2 bg-white border border-gray-300 rounded-lg px-4 py-2 text-xs font-semibold text-gray-700 shadow-sm hover:border-gray-400 transition-colors"
             >
-              <span>Category</span>
+              <span>{selectedCategory}</span>
               <ChevronDown className="w-3.5 h-3.5 text-gray-500" />
             </button>
 
@@ -147,7 +91,7 @@ export default function PortfolioPage() {
                       }}
                       className={`w-full flex items-center justify-between px-3 py-2 text-xs rounded-lg transition-colors ${
                         isSelected
-                          ? "bg-gray-50 text-gray-900 font-bold"
+                          ? "bg-gray-100 text-gray-900 font-bold"
                           : "text-gray-600 hover:bg-gray-50 hover:text-gray-900 font-medium"
                       }`}
                     >
@@ -159,11 +103,9 @@ export default function PortfolioPage() {
                         )}
                         <span>{cat.name}</span>
                       </div>
-                      {cat.count !== null && (
-                        <span className="text-gray-400 text-[11px] font-normal">
-                          ({cat.count})
-                        </span>
-                      )}
+                      <span className="text-gray-400 text-[11px] font-normal">
+                        ({cat.count})
+                      </span>
                     </button>
                   );
                 })}
@@ -185,28 +127,43 @@ export default function PortfolioPage() {
         </div>
 
         {/* Portfolio Grid Layout */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 items-start">
-          {filteredItems.map((item) => (
-            <div
-              key={item.id}
-              className="bg-white rounded-2xl border border-gray-200/80 overflow-hidden shadow-sm hover:shadow-md transition-all cursor-pointer group"
-            >
+        {loading ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+            {[1, 2, 3, 4, 5, 6].map((n) => (
               <div
-                className={`relative w-full bg-gray-100 ${
-                  item.orientation === "landscape" ? "h-64 sm:h-72" : "h-96 sm:h-[480px]"
-                }`}
+                key={n}
+                className="w-full h-80 bg-gray-200/60 rounded-2xl animate-pulse"
+              />
+            ))}
+          </div>
+        ) : filteredItems.length === 0 ? (
+          <div className="text-center py-20 bg-white rounded-2xl border border-gray-200/80">
+            <p className="text-sm text-gray-500">No items found in this category.</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 items-start">
+            {filteredItems.map((item) => (
+              <div
+                key={item._id}
+                className="bg-white rounded-2xl border border-gray-200/80 overflow-hidden shadow-sm hover:shadow-md transition-all cursor-pointer group"
               >
-                <Image
-                  src={item.image}
-                  alt={item.title}
-                  fill
-                  unoptimized
-                  className="object-cover group-hover:scale-105 transition-transform duration-300"
-                />
+                <div
+                  className={`relative w-full bg-gray-100 ${
+                    item.orientation === "landscape" ? "h-64 sm:h-72" : "h-96 sm:h-[480px]"
+                  }`}
+                >
+                  <Image
+                    src={item.imageUrl}
+                    alt={item.title}
+                    fill
+                    unoptimized
+                    className="object-cover group-hover:scale-105 transition-transform duration-300"
+                  />
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
 
       </main>
     </div>

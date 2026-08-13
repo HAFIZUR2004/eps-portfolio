@@ -1,15 +1,55 @@
-// app/dashboard/layout.tsx
+"use client";
 
 import Link from "next/link";
-import Image from "next/image"; // 👈 Image component import করা হলো
+import Image from "next/image";
+import { usePathname } from "next/navigation"; // 👈 Active menu highlight এর জন্য
 import { UserButton } from "@clerk/nextjs";
-import { LayoutDashboard, Star, Users, Settings, ArrowLeft } from "lucide-react";
+import {
+  LayoutDashboard,
+  FolderKanban, // 👈 Portfolio এর জন্য আইকন
+  Star,
+  Users,
+  Settings,
+  ArrowLeft,
+} from "lucide-react";
 
 export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const pathname = usePathname();
+
+  // Navigation Items Array
+  const navItems = [
+    {
+      name: "Overview",
+      href: "/dashboard",
+      icon: LayoutDashboard,
+      exact: true,
+    },
+    {
+      name: "Portfolio", // 👈 পোর্টফোলিও অপশন যুক্ত করা হলো
+      href: "/dashboard/portfolio",
+      icon: FolderKanban,
+    },
+    {
+      name: "Review Management",
+      href: "/dashboard/reviews",
+      icon: Star,
+    },
+    {
+      name: "User Management",
+      href: "/dashboard/users",
+      icon: Users,
+    },
+    {
+      name: "Site Settings",
+      href: "/dashboard/settings",
+      icon: Settings,
+    },
+  ];
+
   return (
     <div className="flex min-h-screen bg-slate-950 text-slate-100 font-sans">
       {/* Sidebar */}
@@ -18,7 +58,7 @@ export default function DashboardLayout({
           {/* Logo / Brand - Click to Redirect Home */}
           <Link href="/" className="flex items-center mb-8 px-2 group">
             <Image
-              src="/logo2.png" // 👈 ডাইনামিক লোগো URL
+              src="/logo2.png"
               alt="Dashboard Logo"
               width={150}
               height={40}
@@ -27,39 +67,29 @@ export default function DashboardLayout({
             />
           </Link>
 
-          {/* Navigation Links */}
-          <nav className="space-y-2">
-            <Link
-              href="/dashboard"
-              className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-300 hover:bg-slate-800/60 hover:text-emerald-400 transition-all"
-            >
-              <LayoutDashboard size={18} />
-              Overview
-            </Link>
+          {/* Dynamic Navigation Links */}
+          <nav className="space-y-1.5">
+            {navItems.map((item) => {
+              const Icon = item.icon;
+              const isActive = item.exact
+                ? pathname === item.href
+                : pathname.startsWith(item.href);
 
-            <Link
-              href="/dashboard/reviews"
-              className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-300 hover:bg-slate-800/60 hover:text-emerald-400 transition-all"
-            >
-              <Star size={18} />
-              Review Management
-            </Link>
-
-            <Link
-              href="/dashboard/users"
-              className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-300 hover:bg-slate-800/60 hover:text-emerald-400 transition-all"
-            >
-              <Users size={18} />
-              User Management
-            </Link>
-
-            <Link
-              href="/dashboard/settings"
-              className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-300 hover:bg-slate-800/60 hover:text-emerald-400 transition-all"
-            >
-              <Settings size={18} />
-              Site Settings
-            </Link>
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all ${
+                    isActive
+                      ? "bg-slate-800 text-emerald-400 font-semibold shadow-sm border border-slate-700/50"
+                      : "text-slate-400 hover:bg-slate-800/50 hover:text-slate-200"
+                  }`}
+                >
+                  <Icon size={18} className={isActive ? "text-emerald-400" : "text-slate-400"} />
+                  {item.name}
+                </Link>
+              );
+            })}
           </nav>
         </div>
 

@@ -3,15 +3,26 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { usePathname } from 'next/navigation'; // 👈 Active Route ট্র্যাক করার জন্য
 import { UserButton, useUser } from '@clerk/nextjs';
 
 export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [logo, setLogo] = useState('/logo2.png'); // Default logo
   const { user, isSignedIn, isLoaded } = useUser();
+  const pathname = usePathname(); // 👈 বর্তমান পেজের পাথ বা URL পাওয়া যাবে
 
   // Admin Check
   const isAdmin = user?.publicMetadata?.role === 'admin';
+
+  // Navigation Links Data Array
+  const navLinks = [
+    { name: 'Home', href: '/' },
+    { name: 'Service', href: '/service' },
+    { name: 'Portfolio', href: '/portfolio' },
+    { name: 'Blog', href: '/blog' },
+    { name: 'Contact', href: '/contact' },
+  ];
 
   // 🔄 MongoDB থেকে ডাইনামিক লোগো ফেচ করা
   useEffect(() => {
@@ -36,7 +47,7 @@ export default function Navbar() {
         {/* Dynamic Logo Section */}
         <Link href="/" className="flex items-center gap-3">
           <Image
-            src={logo} // 👈 MongoDB থেকে আসা ডাইনামিক লোগো URL
+            src={logo}
             alt="Evacuation Plan Service Logo"
             width={160}
             height={60}
@@ -46,18 +57,33 @@ export default function Navbar() {
         </Link>
 
         {/* Desktop Navigation Menu */}
-        <nav className="hidden md:flex items-center space-x-8 text-gray-700 font-medium text-sm">
-          <Link href="/" className="text-[#ff5722] font-semibold">Home</Link>
-          <Link href="/service" className="hover:text-[#ff5722] transition">Service</Link>
-          <Link href="/portfolio" className="hover:text-[#ff5722] transition">Portfolio</Link>
-          <Link href="/blog" className="hover:text-[#ff5722] transition">Blog</Link>
-          <Link href="/contact" className="hover:text-[#ff5722] transition">Contact</Link>
+        <nav className="hidden md:flex items-center space-x-8 text-sm">
+          {navLinks.map((link) => {
+            const isActive = pathname === link.href; // 👈 চেক করা হচ্ছে লিঙ্কটি অ্যাক্টিভ কি না
+            return (
+              <Link
+                key={link.name}
+                href={link.href}
+                className={`transition-colors duration-200 font-medium ${
+                  isActive
+                    ? 'text-[#ff5722] font-bold border-b-2 border-[#ff5722] pb-1'
+                    : 'text-gray-700 hover:text-[#ff5722]'
+                }`}
+              >
+                {link.name}
+              </Link>
+            );
+          })}
 
           {/* Admin Dashboard Link */}
           {isLoaded && isSignedIn && isAdmin && (
             <Link
               href="/dashboard"
-              className="bg-gray-800 text-white px-3 py-1.5 rounded-md text-xs font-semibold hover:bg-gray-700 transition"
+              className={`px-3 py-1.5 rounded-md text-xs font-semibold transition ${
+                pathname.startsWith('/dashboard')
+                  ? 'bg-[#ff5722] text-white shadow-sm'
+                  : 'bg-gray-800 text-white hover:bg-gray-700'
+              }`}
             >
               Dashboard
             </Link>
@@ -101,18 +127,34 @@ export default function Navbar() {
 
       {/* Mobile Menu Dropdown */}
       {isMenuOpen && (
-        <div className="md:hidden mt-4 bg-white p-4 rounded-lg shadow-lg flex flex-col space-y-4 items-center">
-          <Link href="/" className="text-[#ff5722] font-semibold" onClick={() => setIsMenuOpen(false)}>Home</Link>
-          <Link href="/service" className="hover:text-[#ff5722] transition" onClick={() => setIsMenuOpen(false)}>Service</Link>
-          <Link href="/portfolio" className="hover:text-[#ff5722] transition" onClick={() => setIsMenuOpen(false)}>Portfolio</Link>
-          <Link href="/blog" className="hover:text-[#ff5722] transition" onClick={() => setIsMenuOpen(false)}>Blog</Link>
-          <Link href="/contact" className="hover:text-[#ff5722] transition" onClick={() => setIsMenuOpen(false)}>Contact</Link>
+        <div className="md:hidden mt-4 bg-white p-4 rounded-lg shadow-lg flex flex-col space-y-3 items-center">
+          {navLinks.map((link) => {
+            const isActive = pathname === link.href;
+            return (
+              <Link
+                key={link.name}
+                href={link.href}
+                onClick={() => setIsMenuOpen(false)}
+                className={`w-full text-center py-2 rounded-md text-sm font-medium transition ${
+                  isActive
+                    ? 'bg-[#ff5722]/10 text-[#ff5722] font-bold'
+                    : 'text-gray-700 hover:text-[#ff5722] hover:bg-gray-50'
+                }`}
+              >
+                {link.name}
+              </Link>
+            );
+          })}
 
           {/* Mobile Admin Dashboard Link */}
           {isLoaded && isSignedIn && isAdmin && (
             <Link
               href="/dashboard"
-              className="bg-gray-800 text-white w-full text-center py-2 rounded-md text-sm font-semibold hover:bg-gray-700 transition"
+              className={`w-full text-center py-2 rounded-md text-sm font-semibold transition ${
+                pathname.startsWith('/dashboard')
+                  ? 'bg-[#ff5722] text-white'
+                  : 'bg-gray-800 text-white hover:bg-gray-700'
+              }`}
               onClick={() => setIsMenuOpen(false)}
             >
               Dashboard
