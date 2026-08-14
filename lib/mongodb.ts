@@ -12,3 +12,4 @@ export const connectDB = async () => {
     console.error('MongoDB Connection Error:', error);
   }
 };
+export default connectDB; // 👈 এই লাইনটি নিশ্চিত করুন

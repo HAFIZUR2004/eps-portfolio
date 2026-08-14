@@ -2,11 +2,12 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { usePathname } from "next/navigation"; // 👈 Active menu highlight এর জন্য
+import { usePathname } from "next/navigation";
 import { UserButton } from "@clerk/nextjs";
 import {
   LayoutDashboard,
-  FolderKanban, // 👈 Portfolio এর জন্য আইকন
+  FolderKanban,
+  Briefcase, // 👈 Services এর জন্য নতুন আইকন
   Star,
   Users,
   Settings,
@@ -29,7 +30,12 @@ export default function DashboardLayout({
       exact: true,
     },
     {
-      name: "Portfolio", // 👈 পোর্টফোলিও অপশন যুক্ত করা হলো
+      name: "Services", // 👈 নতুন সার্ভিসেস অপশন
+      href: "/dashboard/services",
+      icon: Briefcase,
+    },
+    {
+      name: "Portfolio",
       href: "/dashboard/portfolio",
       icon: FolderKanban,
     },
@@ -55,7 +61,7 @@ export default function DashboardLayout({
       {/* Sidebar */}
       <aside className="w-64 bg-slate-900/80 border-r border-slate-800/80 p-5 flex flex-col justify-between backdrop-blur-md">
         <div>
-          {/* Logo / Brand - Click to Redirect Home */}
+          {/* Logo / Brand */}
           <Link href="/" className="flex items-center mb-8 px-2 group">
             <Image
               src="/logo2.png"
@@ -109,7 +115,7 @@ export default function DashboardLayout({
         {/* Top Header */}
         <header className="h-16 bg-slate-900/50 border-b border-slate-800/80 px-6 flex items-center justify-between backdrop-blur-md">
           <h1 className="text-sm font-semibold text-slate-400">
-            Portfolio Management System
+            Services & Portfolio Management System
           </h1>
 
           <div className="flex items-center gap-4">

@@ -18,7 +18,7 @@ export default function Navbar() {
   // Navigation Links Data Array
   const navLinks = [
     { name: 'Home', href: '/' },
-    { name: 'Service', href: '/service' },
+    { name: 'Services', href: '/services' },
     { name: 'Portfolio', href: '/portfolio' },
     { name: 'Blog', href: '/blog' },
     { name: 'Contact', href: '/contact' },

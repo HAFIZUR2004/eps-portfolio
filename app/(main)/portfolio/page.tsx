@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
-import { ChevronDown, Check, Loader2 } from "lucide-react";
+import { ChevronDown, Check } from "lucide-react";
 
 interface PortfolioItem {
   _id: string;
@@ -18,7 +18,6 @@ export default function PortfolioPage() {
   const [selectedCategory, setSelectedCategory] = useState("All Categories");
   const [isCategoryOpen, setIsCategoryOpen] = useState(false);
 
-  // 1. Fetch Dynamic Data from API
   useEffect(() => {
     const fetchPortfolioItems = async () => {
       try {
@@ -35,7 +34,6 @@ export default function PortfolioPage() {
     fetchPortfolioItems();
   }, []);
 
-  // 2. Generate Dynamic Categories with Live Counts
   const baseCategories = [
     "Fire Evacuation Plan",
     "Fire Alarm Zone Plan",
@@ -53,7 +51,6 @@ export default function PortfolioPage() {
     })),
   ];
 
-  // 3. Filter Items based on Selected Category
   const filteredItems =
     selectedCategory === "All Categories"
       ? items
@@ -61,13 +58,8 @@ export default function PortfolioPage() {
 
   return (
     <div className="min-h-screen bg-[#FDFBF7] text-gray-800">
-      {/* Main Container */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-        
-        {/* Filters Top Bar */}
         <div className="relative z-20 mb-8 flex flex-wrap gap-3 items-center">
-          
-          {/* Category Dropdown */}
           <div className="relative">
             <button
               onClick={() => setIsCategoryOpen(!isCategoryOpen)}
@@ -77,7 +69,6 @@ export default function PortfolioPage() {
               <ChevronDown className="w-3.5 h-3.5 text-gray-500" />
             </button>
 
-            {/* Dropdown Menu */}
             {isCategoryOpen && (
               <div className="absolute top-full left-0 mt-2 w-64 bg-white border border-gray-200 rounded-xl shadow-xl p-2 z-30 space-y-1">
                 {categories.map((cat, idx) => {
@@ -112,21 +103,8 @@ export default function PortfolioPage() {
               </div>
             )}
           </div>
-
-          {/* Country Filter Dropdown */}
-          <button className="flex items-center gap-2 bg-white border border-gray-300 rounded-lg px-4 py-2 text-xs font-semibold text-gray-700 shadow-sm hover:border-gray-400 transition-colors">
-            <span>Country</span>
-            <ChevronDown className="w-3.5 h-3.5 text-gray-500" />
-          </button>
-
-          {/* Language Filter Dropdown */}
-          <button className="flex items-center gap-2 bg-white border border-gray-300 rounded-lg px-4 py-2 text-xs font-semibold text-gray-700 shadow-sm hover:border-gray-400 transition-colors">
-            <span>Language</span>
-            <ChevronDown className="w-3.5 h-3.5 text-gray-500" />
-          </button>
         </div>
 
-        {/* Portfolio Grid Layout */}
         {loading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
             {[1, 2, 3, 4, 5, 6].map((n) => (
@@ -164,7 +142,6 @@ export default function PortfolioPage() {
             ))}
           </div>
         )}
-
       </main>
     </div>
   );

@@ -1,14 +1,13 @@
 import { NextResponse } from "next/server";
-import { connectDB } from "@/lib/db"; // আপনার MongoDB কানেকশন ফাইল
+import { connectDB } from "@/lib/db";
 import { Portfolio } from "@/models/Portfolio";
 
-// 📥 পোর্টফোলিও আইটেমস ও ক্যাটাগরি কাউন্ট ফেচ করা
+// 📥 পোর্টফোলিও আইটেমস ফেচ করা
 export async function GET() {
   try {
     await connectDB();
     const items = await Portfolio.find({}).sort({ createdAt: -1 });
 
-    // ডাইনামিক ক্যাটাগরি এবং কাউন্ট হিসাব করা
     const categoryCounts: Record<string, number> = {};
     items.forEach((item) => {
       categoryCounts[item.category] = (categoryCounts[item.category] || 0) + 1;
@@ -28,7 +27,7 @@ export async function GET() {
   }
 }
 
-// 📤 ড্যাশবোর্ড থেকে নতুন পোর্টফোলিও যোগ করা
+// 📤 নতুন পোর্টফোলিও যোগ করা
 export async function POST(req: Request) {
   try {
     await connectDB();

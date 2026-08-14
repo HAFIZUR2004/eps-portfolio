@@ -2,7 +2,8 @@
 
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
-import { Trash2, Plus, Loader2, ImagePlus } from "lucide-react";
+import { Trash2, Plus, Loader2, ImagePlus, UploadCloud, CheckCircle2 } from "lucide-react";
+import { CldUploadButton } from "next-cloudinary";
 
 interface PortfolioItem {
   _id: string;
@@ -46,7 +47,7 @@ export default function PortfolioDashboard() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.title || !form.imageUrl) {
-      alert("Please fill in all required fields!");
+      alert("Please upload an image and fill in all required fields!");
       return;
     }
 
@@ -97,7 +98,6 @@ export default function PortfolioDashboard() {
 
   return (
     <div className="p-2 md:p-6 max-w-7xl mx-auto space-y-8 text-slate-100">
-      
       {/* Header */}
       <div>
         <h1 className="text-2xl font-bold text-white">Portfolio Manager</h1>
@@ -111,7 +111,6 @@ export default function PortfolioDashboard() {
         </h2>
 
         <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-5">
-          
           {/* Title */}
           <div>
             <label className="block text-xs font-medium text-slate-300 mb-2">Title *</label>
@@ -125,17 +124,44 @@ export default function PortfolioDashboard() {
             />
           </div>
 
-          {/* Image URL */}
+          {/* Cloudinary Image Upload Button */}
           <div>
-            <label className="block text-xs font-medium text-slate-300 mb-2">Image URL *</label>
-            <input
-              type="text"
-              placeholder="Paste Image URL or Cloudinary URL"
-              value={form.imageUrl}
-              onChange={(e) => setForm({ ...form, imageUrl: e.target.value })}
-              className="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-4 py-2.5 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all"
-              required
-            />
+            <label className="block text-xs font-medium text-slate-300 mb-2">Portfolio Image *</label>
+            <div className="flex items-center gap-3">
+              <CldUploadButton
+                uploadPreset={process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET}
+                options={{
+                  sources: ["local", "url"], // ফাইল ম্যানেজার ও URL সাপোর্ট
+                  clientAllowedFormats: ["png", "jpg", "jpeg", "webp"],
+                  format: "webp", // 👈 ফাইল আপলোড হওয়ার সাথে সাথে WebP তে কনভার্ট হবে
+                  transformation: [
+                    { quality: "auto" } // 👈 অটোমেটিক সাইজ ও কোয়ালিটি অপটিমাইজ করবে
+                  ],
+                  maxFileSize: 10000000,
+                  multiple: false,
+                }}
+                onSuccess={(result: any) => {
+                  if (result?.info?.secure_url) {
+                    setForm((prev) => ({ ...prev, imageUrl: result.info.secure_url }));
+                  }
+                }}
+                className="w-full border-2 border-dashed border-slate-700 hover:border-emerald-500 bg-slate-950 rounded-xl py-2 px-4 flex items-center justify-center gap-2 text-xs text-slate-300 hover:text-white transition-all cursor-pointer"
+              >
+                <UploadCloud className="w-4 h-4 text-emerald-400" />
+                <span>{form.imageUrl ? "Change Image" : "Upload Image (Auto-WebP)"}</span>
+              </CldUploadButton>
+
+              {form.imageUrl && (
+                <div className="relative w-10 h-10 rounded-lg overflow-hidden border border-emerald-500/50 shrink-0">
+                  <Image src={form.imageUrl} alt="Preview" fill className="object-cover" />
+                </div>
+              )}
+            </div>
+            {form.imageUrl && (
+              <p className="text-[10px] text-emerald-400 mt-1 flex items-center gap-1">
+                <CheckCircle2 className="w-3 h-3" /> Converted to WebP & Uploaded!
+              </p>
+            )}
           </div>
 
           {/* Category */}
@@ -174,8 +200,8 @@ export default function PortfolioDashboard() {
           <div className="md:col-span-2 pt-2">
             <button
               type="submit"
-              disabled={isSubmitting}
-              className="bg-emerald-500 text-slate-950 font-semibold px-6 py-2.5 rounded-xl text-sm hover:bg-emerald-400 transition flex items-center gap-2 disabled:opacity-50"
+              disabled={isSubmitting || !form.imageUrl}
+              className="bg-emerald-500 text-slate-950 font-semibold px-6 py-2.5 rounded-xl text-sm hover:bg-emerald-400 transition flex items-center gap-2 disabled:opacity-50 cursor-pointer"
             >
               {isSubmitting ? (
                 <>
@@ -191,7 +217,7 @@ export default function PortfolioDashboard() {
         </form>
       </div>
 
-      {/* Existing Items List (Delete Options) */}
+      {/* Existing Items List */}
       <div>
         <h2 className="text-base font-semibold text-slate-100 mb-4">
           All Uploaded Items ({items.length})
@@ -234,7 +260,7 @@ export default function PortfolioDashboard() {
 
                   <button
                     onClick={() => handleDelete(item._id)}
-                    className="p-2 text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 rounded-lg transition"
+                    className="p-2 text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 rounded-lg transition cursor-pointer"
                     title="Delete Item"
                   >
                     <Trash2 className="w-4 h-4" />
@@ -245,7 +271,6 @@ export default function PortfolioDashboard() {
           </div>
         )}
       </div>
-
     </div>
   );
 }

@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
+  --background: #f5eeea; /* ছবির সফট ক্রিম/বেইজ কালারটি */
   --foreground: #171717;
 }
 

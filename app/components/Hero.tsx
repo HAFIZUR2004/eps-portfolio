@@ -40,7 +40,7 @@ export default function Hero() {
   return (
     <>
       {/* ================= HERO SECTION ================= */}
-      <section className="bg-[#f4f1eb] pt-16 pb-12 px-6 md:px-12 relative overflow-hidden">
+      <section className=" pt-16 pb-12 px-6 md:px-12 relative overflow-hidden">
         <div className="max-w-7xl mx-auto flex flex-col lg:flex-row items-center gap-12 lg:gap-16">
           
           {/* LEFT CONTENT */}
