@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, ChangeEvent, FormEvent } from 'react';
-import { MessageSquare, Mail, Globe, Check, Send } from 'lucide-react';
+import { MessageSquare, Mail, Globe, Check, Send, Loader2, CheckCircle2, AlertCircle } from 'lucide-react';
 
 // Form Data Interface for TypeScript
 interface FormDataState {
@@ -47,6 +47,8 @@ export default function ContactPage() {
   });
 
   const [fileName, setFileName] = useState<string>('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
   // Handle Input Changes
   const handleInputChange = (
@@ -78,11 +80,74 @@ export default function ContactPage() {
     }
   };
 
-  // Form Submit Handler
-  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
+  // 📌 ফাইলকে Base64 তে রূপান্তরের ফাংশন
+  const convertFileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = (error) => reject(error);
+    });
+  };
+
+  // 📌 ফর্ম সাবমিট হ্যান্ডলার (Base64 + JSON)
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    console.log("Form Submitted:", formData);
-    // API Call বা Server Actions এখানে হ্যান্ডেল করুন
+    setMessage(null);
+    setIsSubmitting(true);
+
+    try {
+      let fileData = null;
+
+      // যদি ফাইল থাকে, তাহলে Base64 তে রূপান্তর করুন
+      if (formData.file) {
+        const base64String = await convertFileToBase64(formData.file);
+        fileData = {
+          name: formData.file.name,
+          base64: base64String,
+        };
+      }
+
+      // API তে JSON ডেটা পাঠান (Base64 সহ)
+      const response = await fetch('/api/contact', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          fullName: formData.fullName,
+          whatsapp: formData.whatsapp,
+          country: formData.country,
+          buildingType: formData.buildingType,
+          message: formData.message,
+          services: formData.services,
+          file: fileData, // ✅ Base64 ফাইল ডেটা
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setMessage({ type: "success", text: data.message || "Your message has been sent successfully!" });
+        // রিসেট ফর্ম
+        setFormData({
+          fullName: '',
+          whatsapp: '',
+          country: '',
+          buildingType: '',
+          message: '',
+          services: [],
+          file: null,
+        });
+        setFileName('');
+      } else {
+        setMessage({ type: "error", text: data.error || "Failed to send message. Please try again." });
+      }
+    } catch (error: any) {
+      setMessage({ type: "error", text: error.message || "Something went wrong. Please try again." });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -90,15 +155,10 @@ export default function ContactPage() {
       <div className="max-w-7xl mx-auto">
         
         {/* Top Header */}
-         <div className="mb-10 flex items-center justify-center gap-4">
-
+        <div className="mb-10 flex items-center justify-center gap-4">
           {/* Left Decoration */}
           <div className="relative h-8 w-8 shrink-0">
-
-            {/* Red Circle */}
             <span className="absolute left-0 top-0 h-7 w-7 rounded-full bg-[#FF3B1D]" />
-
-            {/* Green Overlapping Circle */}
             <span className="absolute right-0 top-1 z-10 h-5 w-5 rounded-full bg-[#006A4E]" />
           </div>
 
@@ -109,14 +169,30 @@ export default function ContactPage() {
 
           {/* Right Decoration */}
           <div className="relative h-8 w-8 shrink-0">
-
-            {/* Green Overlapping Circle */}
             <span className="absolute left-0 top-1 z-10 h-5 w-5 rounded-full bg-[#006A4E]" />
-
-            {/* Red Circle */}
             <span className="absolute right-0 top-0 h-7 w-7 rounded-full bg-[#FF3B1D]" />
           </div>
         </div>
+
+        {/* Status Message */}
+        {message && (
+          <div className="max-w-2xl mx-auto mb-6">
+            <div
+              className={`p-4 rounded-xl flex items-center gap-3 text-xs font-medium border ${
+                message.type === "success"
+                  ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                  : "bg-red-50 text-red-700 border-red-200"
+              }`}
+            >
+              {message.type === "success" ? (
+                <CheckCircle2 className="w-4 h-4 shrink-0" />
+              ) : (
+                <AlertCircle className="w-4 h-4 shrink-0" />
+              )}
+              <span>{message.text}</span>
+            </div>
+          </div>
+        )}
 
         {/* Content Layout */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
@@ -136,7 +212,7 @@ export default function ContactPage() {
             <div className="space-y-3">
               {/* WhatsApp Link */}
               <a 
-                href="https://wa.me/YOUR_PHONE_NUMBER" 
+                href={`https://wa.me/${process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || 'YOUR_PHONE_NUMBER'}`} 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex items-center gap-4 hover:border-emerald-200 transition-all block"
@@ -145,14 +221,14 @@ export default function ContactPage() {
                   <MessageSquare className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-bold text-gray-900">Whatsapp Us</h3>
+                  <h3 className="text-sm font-bold text-gray-900">WhatsApp Us</h3>
                   <p className="text-xs text-gray-500">Available 24 hours</p>
                 </div>
               </a>
 
               {/* Email Link */}
               <a 
-                href="mailto:your-email@example.com"
+                href={`mailto:${process.env.NEXT_PUBLIC_CONTACT_EMAIL || 'your-email@example.com'}`}
                 className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex items-center gap-4 hover:border-blue-200 transition-all block"
               >
                 <div className="w-10 h-10 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center shrink-0">
@@ -199,7 +275,7 @@ export default function ContactPage() {
               {/* Full Name */}
               <div>
                 <label htmlFor="fullName" className="block text-xs font-bold text-gray-800 mb-1">
-                  Full Name
+                  Full Name *
                 </label>
                 <input 
                   id="fullName"
@@ -247,6 +323,10 @@ export default function ContactPage() {
                     <option value="UK">United Kingdom</option>
                     <option value="CA">Canada</option>
                     <option value="AU">Australia</option>
+                    <option value="DE">Germany</option>
+                    <option value="FR">France</option>
+                    <option value="JP">Japan</option>
+                    <option value="IN">India</option>
                   </select>
                 </div>
 
@@ -265,6 +345,9 @@ export default function ContactPage() {
                     <option value="residential">Residential</option>
                     <option value="commercial">Commercial</option>
                     <option value="industrial">Industrial</option>
+                    <option value="hospital">Hospital</option>
+                    <option value="school">School</option>
+                    <option value="hotel">Hotel</option>
                   </select>
                 </div>
               </div>
@@ -272,7 +355,7 @@ export default function ContactPage() {
               {/* Message */}
               <div>
                 <label htmlFor="message" className="block text-xs font-bold text-gray-800 mb-1">
-                  Message
+                  Message *
                 </label>
                 <textarea 
                   id="message"
@@ -282,6 +365,7 @@ export default function ContactPage() {
                   onChange={handleInputChange}
                   placeholder="Mark the locations of fire extinguishers, fire alarm, smoke detectors, First aid kit, emergency exits, and assembly point, etc." 
                   className="w-full px-3.5 py-2.5 text-xs rounded-lg border border-gray-200 focus:outline-none focus:ring-1 focus:ring-emerald-500 bg-gray-50/30 resize-none placeholder:text-gray-400 text-gray-900"
+                  required
                 ></textarea>
               </div>
 
@@ -334,10 +418,20 @@ export default function ContactPage() {
               {/* Submit Button */}
               <button 
                 type="submit" 
-                className="w-full bg-[#006A4E] hover:bg-[#00523d] text-white font-bold py-3 px-4 rounded-xl text-xs flex items-center justify-center gap-2 shadow-md transition-all active:scale-[0.99]"
+                disabled={isSubmitting}
+                className="w-full bg-[#006A4E] hover:bg-[#00523d] text-white font-bold py-3 px-4 rounded-xl text-xs flex items-center justify-center gap-2 shadow-md transition-all active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Send Quote Request
-                <Send className="w-3.5 h-3.5" />
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    Sending...
+                  </>
+                ) : (
+                  <>
+                    Send Quote Request
+                    <Send className="w-3.5 h-3.5" />
+                  </>
+                )}
               </button>
 
             </form>

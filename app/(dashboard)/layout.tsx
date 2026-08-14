@@ -7,9 +7,11 @@ import { UserButton } from "@clerk/nextjs";
 import {
   LayoutDashboard,
   FolderKanban,
-  Briefcase, // 👈 Services এর জন্য নতুন আইকন
+  Briefcase,
+  FileText,
   Star,
   Users,
+  Handshake, // 👈 Trusted Clients এর জন্য আইকন
   Settings,
   ArrowLeft,
 } from "lucide-react";
@@ -30,14 +32,24 @@ export default function DashboardLayout({
       exact: true,
     },
     {
-      name: "Services", // 👈 নতুন সার্ভিসেস অপশন
+      name: "Services",
       href: "/dashboard/services",
       icon: Briefcase,
+    },
+    {
+      name: "Blog Management",
+      href: "/dashboard/blogs",
+      icon: FileText,
     },
     {
       name: "Portfolio",
       href: "/dashboard/portfolio",
       icon: FolderKanban,
+    },
+    {
+      name: "Trusted Clients", // 👈 নতুন রাউট যোগ করা হয়েছে
+      href: "/dashboard/clients",
+      icon: Handshake,
     },
     {
       name: "Review Management",
@@ -115,7 +127,7 @@ export default function DashboardLayout({
         {/* Top Header */}
         <header className="h-16 bg-slate-900/50 border-b border-slate-800/80 px-6 flex items-center justify-between backdrop-blur-md">
           <h1 className="text-sm font-semibold text-slate-400">
-            Services & Portfolio Management System
+            Admin Management System
           </h1>
 
           <div className="flex items-center gap-4">

@@ -108,13 +108,11 @@ export default function ServiceDetailPage({
     );
   }
 
-  // Gallery Array
   const galleryImages =
     service.images && service.images.length > 0
       ? service.images
       : [service.mainImage || "/placeholder.jpg"];
 
-  // Packages Data
   const packagesInfo = {
     basic: {
       price: service.basicPackage?.price
@@ -152,7 +150,6 @@ export default function ServiceDetailPage({
     },
   };
 
-  // FAQ from API or Fallback
   const faqs =
     service.faqs && service.faqs.length > 0
       ? service.faqs
@@ -187,7 +184,6 @@ export default function ServiceDetailPage({
 
   return (
     <div className="bg-[#F8F6F2] min-h-screen text-gray-800 pb-20">
-      {/* Top Banner Header */}
       <div className="bg-[#EFECE6] border-b border-gray-200/80 py-6 px-4 sm:px-8">
         <div className="max-w-7xl mx-auto">
           <p className="text-xs text-gray-500 mb-2 flex items-center gap-1">
@@ -212,13 +208,9 @@ export default function ServiceDetailPage({
         </div>
       </div>
 
-      {/* Main Layout Container */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8 grid grid-cols-1 lg:grid-cols-3 gap-10">
-        {/* ================= LEFT COLUMN (CONTENT) ================= */}
         <div className="lg:col-span-2 space-y-8">
-          {/* 1. Main Image Gallery */}
           <div className="relative w-full h-[320px] sm:h-[400px] md:h-[450px] bg-gray-200 rounded-xl overflow-hidden border border-gray-300 shadow-sm">
-            {/* Badges */}
             <div className="absolute top-4 left-4 bg-[#096b43] text-white px-3 py-1.5 rounded-l-full rounded-r-full text-xs font-bold shadow-md z-10 leading-tight">
               ENGLISH <br /> LANGUAGE
             </div>
@@ -238,7 +230,6 @@ export default function ServiceDetailPage({
             />
           </div>
 
-          {/* 2. Thumbnails */}
           {galleryImages.length > 1 && (
             <div className="flex items-center gap-3 overflow-x-auto pb-1">
               {galleryImages.map((img, idx) => (
@@ -262,7 +253,6 @@ export default function ServiceDetailPage({
             </div>
           )}
 
-          {/* 3. About this Gig */}
           <div className="bg-white p-6 md:p-8 rounded-lg border border-gray-200 shadow-sm space-y-3">
             <h2 className="text-[17px] font-bold text-gray-900">
               About this Gig
@@ -273,7 +263,6 @@ export default function ServiceDetailPage({
             </p>
           </div>
 
-          {/* 4. Why Work With Me */}
           <div className="bg-white p-6 md:p-8 rounded-lg border border-gray-200 shadow-sm space-y-3">
             <h2 className="text-[17px] font-bold text-gray-900">
               Why Work With Me
@@ -294,7 +283,6 @@ export default function ServiceDetailPage({
             </ul>
           </div>
 
-          {/* 5. FAQ Section */}
           <div className="bg-white p-6 md:p-8 rounded-lg border border-gray-200 shadow-sm space-y-4">
             <h2 className="text-[17px] font-bold text-gray-900 mb-4">FAQ</h2>
             <div className="space-y-2">
@@ -324,7 +312,6 @@ export default function ServiceDetailPage({
             </div>
           </div>
 
-          {/* 6. Recent Works */}
           <div className="bg-white p-6 md:p-8 rounded-lg border border-gray-200 shadow-sm space-y-4">
             <h2 className="text-[17px] font-bold text-gray-900 mb-4">
               Recent Works
@@ -353,11 +340,8 @@ export default function ServiceDetailPage({
           </div>
         </div>
 
-        {/* ================= RIGHT COLUMN (SIDEBAR / ORDER) ================= */}
         <div className="space-y-6">
-          {/* Order Box */}
           <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden sticky top-6">
-            {/* Price Header */}
             <div className="bg-[#096b43] text-white text-center py-4">
               <div className="text-sm font-light mb-0.5">Price</div>
               <div className="text-3xl font-bold">
@@ -365,7 +349,6 @@ export default function ServiceDetailPage({
               </div>
             </div>
 
-            {/* Quantity */}
             <div className="p-5 border-b border-gray-200">
               <label className="block text-sm font-medium text-gray-700 mb-1.5">
                 Quantity
@@ -381,7 +364,6 @@ export default function ServiceDetailPage({
               </select>
             </div>
 
-            {/* Packages Radio Selector */}
             <div className="p-5">
               <h3 className="font-bold text-[15px] text-gray-900 mb-3">
                 Packages
@@ -421,7 +403,6 @@ export default function ServiceDetailPage({
               </div>
             </div>
 
-            {/* Brief & Note */}
             <div className="p-5 border-t border-gray-200 bg-[#fafafa]">
               <p className="font-semibold text-[14px] text-gray-900 mb-1">
                 Brief: {packagesInfo[selectedPackage].title}
@@ -444,7 +425,6 @@ export default function ServiceDetailPage({
             </div>
           </div>
 
-          {/* Seller Info Box */}
           <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-5">
             <div className="flex items-center gap-3 mb-3">
               <div className="w-12 h-12 rounded-full overflow-hidden bg-gray-200 relative shrink-0">

@@ -80,7 +80,6 @@ export default function ServicePage(): JSX.Element {
     fetchServices();
   }, []);
 
-  // Safe filtering
   const filteredServices: Service[] = (services || []).filter((service) => {
     if (!service) return false;
 
@@ -97,7 +96,7 @@ export default function ServicePage(): JSX.Element {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 text-gray-800 font-sans pb-20">
-      {/* ================= CATEGORY DROPDOWN ================= */}
+      {/* CATEGORY DROPDOWN */}
       <section className="max-w-6xl mx-auto px-4 mt-10">
         <div className="flex justify-center">
           <div className="relative inline-block group">
@@ -119,7 +118,7 @@ export default function ServicePage(): JSX.Element {
         </div>
       </section>
 
-      {/* ================= SERVICES GRID ================= */}
+      {/* SERVICES GRID */}
       <section className="max-w-6xl mx-auto px-4 mt-12">
         {loading ? (
           <div className="flex flex-col items-center justify-center py-20 gap-3">
@@ -161,7 +160,6 @@ export default function ServicePage(): JSX.Element {
                   className="bg-white rounded-2xl border border-gray-200/60 overflow-hidden hover:shadow-2xl transition-all duration-300 group hover:-translate-y-1 flex flex-col justify-between"
                 >
                   <div>
-                    {/* Image Container */}
                     <div className="relative h-52 bg-gradient-to-br from-gray-100 to-gray-200 overflow-hidden">
                       {service.popular && (
                         <span className="absolute top-3 left-3 z-10 bg-emerald-600 text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-md flex items-center gap-1">
@@ -188,9 +186,7 @@ export default function ServicePage(): JSX.Element {
                       />
                     </div>
 
-                    {/* Content Container */}
                     <div className="p-6">
-                      {/* Category & Rating */}
                       <div className="flex justify-between items-center mb-3">
                         <span className="text-xs font-semibold text-emerald-700 bg-emerald-50 px-3 py-1 rounded-full">
                           {service.category || "Safety Design"}
@@ -206,19 +202,16 @@ export default function ServicePage(): JSX.Element {
                         </div>
                       </div>
 
-                      {/* Title */}
                       <h3 className="font-bold text-xl mb-1 line-clamp-1 group-hover:text-emerald-700 transition-colors">
                         {service.title || "Untitled Service"}
                       </h3>
 
-                      {/* Description */}
                       <p className="text-gray-500 text-sm line-clamp-2 mb-5">
                         {service.aboutGig || "No description provided."}
                       </p>
                     </div>
                   </div>
 
-                  {/* Footer Container */}
                   <div className="px-6 pb-6 pt-4 border-t border-gray-100 flex justify-between items-center">
                     <div>
                       <p className="font-semibold text-sm text-gray-700">
@@ -244,7 +237,7 @@ export default function ServicePage(): JSX.Element {
         )}
       </section>
 
-      {/* ================= CUSTOM ORDER BANNER ================= */}
+      {/* CUSTOM ORDER BANNER */}
       <section className="max-w-6xl mx-auto px-4 mt-20">
         <div className="bg-gradient-to-r from-gray-900 to-gray-800 rounded-3xl p-10 md:p-12 text-white text-center md:text-left flex flex-col md:flex-row items-center justify-between gap-8 shadow-2xl">
           <div>

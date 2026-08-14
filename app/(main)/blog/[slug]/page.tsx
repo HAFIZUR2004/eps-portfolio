@@ -1,7 +1,9 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Image from "next/image";
+import Link from "next/link";
+import { useParams } from "next/navigation";
 import {
   Search,
   List,
@@ -14,93 +16,160 @@ import {
   ChevronLeft,
   ChevronRight,
   CornerDownRight,
+  Loader2,
 } from "lucide-react";
 
-// Sidebar Mock Data
-const categories = [
-  { name: "Evacuation Plan", count: "05" },
-  { name: "Fire Safety Plan", count: "02" },
-  { name: "Fire Zone Block Plan", count: "10" },
-  { name: "Fire Hydrant Block Plan", count: "03" },
-];
-
-const popularTags = [
-  "Evacuation Plan",
-  "Fire Safety Plan",
-  "Fire Hydrant Block Plan",
-  "Exit Plan",
-  "Fire Zone Block Plan",
-];
-
-const recentBlogs = [
-  {
-    title: "UK Fire Evacuation Plan Requirements...",
-    category: "Evacuation Plan",
-    date: "07 Aug 2026",
-    image: "https://via.placeholder.com/150/006A4E/FFFFFF?text=Plan",
-  },
-  {
-    title: "UK Fire Evacuation Plan Requirements...",
-    category: "Evacuation Plan",
-    date: "07 Aug 2026",
-    image: "https://via.placeholder.com/150/006A4E/FFFFFF?text=Plan",
-  },
-  {
-    title: "UK Fire Evacuation Plan Requirements...",
-    category: "Evacuation Plan",
-    date: "07 Aug 2026",
-    image: "https://via.placeholder.com/150/006A4E/FFFFFF?text=Plan",
-  },
-  {
-    title: "UK Fire Evacuation Plan Requirements...",
-    category: "Evacuation Plan",
-    date: "07 Aug 2026",
-    image: "https://via.placeholder.com/150/006A4E/FFFFFF?text=Plan",
-  },
-];
-
-// Comment Data Interface
 interface Comment {
-  id: number;
+  _id?: string;
   name: string;
-  role?: string;
-  avatar: string;
+  email?: string;
+  comment: string;
   rating?: number;
   date: string;
-  text: string;
   isAuthorReply?: boolean;
+  avatar?: string;
 }
 
-const commentsData: Comment[] = [
-  {
-    id: 1,
-    name: "kadajssvavmander",
-    avatar: "https://via.placeholder.com/100/3B82F6/FFFFFF?text=U1",
-    rating: 5.0,
-    date: "2 days ago",
-    text: "Thank you for this informative article! I've had a couple of hit and miss experiences with freelancers in the past, and I realize now that I wasn't vetting them properly. Your checklist for choosing the right freelancer is going to be my go-to from now on.",
-  },
-  {
-    id: 2,
-    name: "Dane Jose",
-    avatar: "https://via.placeholder.com/100/10B981/FFFFFF?text=U2",
-    rating: 5.0,
-    date: "1 Month ago",
-    text: "Overall, I highly recommend this freelancer to anyone looking for high-quality work and exceptional service. They are a true professional and I will definitely be hiring them again for future projects. Thank you for your hard work and dedication!",
-  },
-  {
-    id: 3,
-    name: "Harry",
-    role: "Author",
-    avatar: "https://via.placeholder.com/100/F59E0B/FFFFFF?text=H",
-    date: "1 Month ago",
-    text: "Thank you for your comment and I will try to make another post on that topic.",
-    isAuthorReply: true,
-  },
-];
+interface BlogPost {
+  _id: string;
+  title: string;
+  slug: string;
+  excerpt: string;
+  content: string;
+  image: string;
+  category: {
+    _id: string;
+    name: string;
+    slug: string;
+  };
+  author?: {
+    name: string;
+    avatar?: string;
+    bio?: string;
+  };
+  comments: Comment[];
+  tags: string[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface Category {
+  _id: string;
+  name: string;
+  slug: string;
+  count: number;
+}
+
+interface RecentPost {
+  _id: string;
+  title: string;
+  slug: string;
+  excerpt: string;
+  image: string;
+  category: {
+    name: string;
+  };
+  createdAt: string;
+}
 
 export default function BlogDetailsPage() {
+  const params = useParams();
+  const slug = params.slug as string;
+  
+  const [post, setPost] = useState<BlogPost | null>(null);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [recentPosts, setRecentPosts] = useState<RecentPost[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [commentData, setCommentData] = useState({
+    name: "",
+    email: "",
+    comment: "",
+    rating: 5,
+  });
+
+  // Fetch all data
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        
+        // Fetch single blog post
+        const postRes = await fetch(`/api/blogs/${slug}`);
+        if (!postRes.ok) {
+          throw new Error("Blog post not found");
+        }
+        const postData = await postRes.json();
+        setPost(postData);
+
+        // Fetch categories and recent posts
+        const blogsRes = await fetch("/api/blogs");
+        const blogsData = await blogsRes.json();
+        setCategories(blogsData.categories || []);
+        setRecentPosts(blogsData.recentPosts || []);
+
+      } catch (err: any) {
+        setError(err.message || "Failed to load blog details");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [slug]);
+
+  // Handle comment submission
+  const handleCommentSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!post) return;
+
+    try {
+      const res = await fetch(`/api/blogs/${slug}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: commentData.name,
+          email: commentData.email,
+          comment: commentData.comment,
+          rating: commentData.rating,
+          date: new Date().toISOString(),
+        }),
+      });
+
+      if (res.ok) {
+        const updatedPost = await res.json();
+        setPost(updatedPost);
+        setCommentData({ name: "", email: "", comment: "", rating: 5 });
+        alert("Comment added successfully!");
+      } else {
+        alert("Failed to add comment");
+      }
+    } catch (err) {
+      console.error("Comment error:", err);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#FDFBF7] flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-emerald-600" />
+      </div>
+    );
+  }
+
+  if (error || !post) {
+    return (
+      <div className="min-h-screen bg-[#FDFBF7] flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-red-600 font-medium">{error || "Post not found"}</p>
+          <Link href="/blog" className="mt-4 inline-block text-emerald-600 hover:underline">
+            Back to Blog
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#FDFBF7] text-gray-800">
@@ -140,16 +209,13 @@ export default function BlogDetailsPage() {
                 <span>Categories</span>
               </div>
               <ul className="space-y-3 text-xs font-medium text-gray-700">
-                {categories.map((cat, idx) => (
-                  <li key={idx} className="flex justify-between items-center hover:text-emerald-600 cursor-pointer transition-colors">
-                    <span>{cat.name}</span>
-                    <span className="font-semibold text-gray-500">{cat.count}</span>
+                {categories.map((cat) => (
+                  <li key={cat._id} className="flex justify-between items-center hover:text-emerald-600 cursor-pointer transition-colors">
+                    <Link href={`/blog?category=${cat.slug}`}>{cat.name}</Link>
+                    <span className="font-semibold text-gray-500">{String(cat.count || 0).padStart(2, "0")}</span>
                   </li>
                 ))}
               </ul>
-              <button className="mt-4 text-xs font-bold text-emerald-700 hover:underline inline-block">
-                More 20+ Categories
-              </button>
             </div>
 
             {/* Recent Blogs */}
@@ -159,28 +225,34 @@ export default function BlogDetailsPage() {
                 <span>Recent Blogs</span>
               </div>
               <div className="space-y-3">
-                {recentBlogs.map((post, idx) => (
-                  <div
-                    key={idx}
+                {recentPosts.map((recent) => (
+                  <Link
+                    key={recent._id}
+                    href={`/blog/${recent.slug}`}
                     className="flex items-center gap-3 p-2 rounded-xl border border-gray-100 hover:border-emerald-200 hover:bg-emerald-50/20 transition-all cursor-pointer"
                   >
                     <div className="w-16 h-12 relative rounded-lg overflow-hidden shrink-0 bg-gray-100">
                       <Image
-                        src={post.image}
-                        alt={post.title}
+                        src={recent.image || "https://via.placeholder.com/150"}
+                        alt={recent.title}
                         fill
                         className="object-cover"
                       />
                     </div>
                     <div>
                       <h4 className="text-xs font-bold text-gray-900 line-clamp-1">
-                        {post.title}
+                        {recent.title}
                       </h4>
                       <p className="text-[10px] text-gray-500 mt-0.5">
-                        {post.category} • {post.date}
+                        {recent.category?.name || "General"} •{" "}
+                        {new Date(recent.createdAt).toLocaleDateString("en-GB", {
+                          day: "2-digit",
+                          month: "short",
+                          year: "numeric",
+                        })}
                       </p>
                     </div>
-                  </div>
+                  </Link>
                 ))}
               </div>
             </div>
@@ -192,7 +264,7 @@ export default function BlogDetailsPage() {
                 <span>Popular Tags</span>
               </div>
               <div className="flex flex-wrap gap-2">
-                {popularTags.map((tag, idx) => (
+                {post.tags?.map((tag, idx) => (
                   <span
                     key={idx}
                     className="text-[11px] font-medium bg-gray-100 hover:bg-emerald-100 hover:text-emerald-800 text-gray-700 px-3 py-1.5 rounded-md cursor-pointer transition-colors"
@@ -215,8 +287,8 @@ export default function BlogDetailsPage() {
               {/* Featured Cover Image */}
               <div className="w-full h-64 md:h-96 relative rounded-xl overflow-hidden mb-6 bg-gray-100">
                 <Image
-                  src="https://via.placeholder.com/1000x600/2D3748/FFFFFF?text=Blog+Featured+Image"
-                  alt="Blog Cover"
+                  src={post.image || "https://via.placeholder.com/800x400"}
+                  alt={post.title}
                   fill
                   className="object-cover"
                 />
@@ -227,53 +299,45 @@ export default function BlogDetailsPage() {
                 <div className="flex items-center gap-4 flex-wrap">
                   <div className="flex items-center gap-2">
                     <User className="w-4 h-4 text-emerald-600" />
-                    <span className="font-semibold text-gray-800">Robert Hollenbeck</span>
+                    <span className="font-semibold text-gray-800">
+                      {post.author?.name || "Admin"}
+                    </span>
                   </div>
                   <div className="flex items-center gap-1.5">
                     <Calendar className="w-3.5 h-3.5 text-gray-400" />
-                    <span>Jan 20, 2025</span>
+                    <span>
+                      {new Date(post.createdAt).toLocaleDateString("en-GB", {
+                        day: "2-digit",
+                        month: "short",
+                        year: "numeric",
+                      })}
+                    </span>
                   </div>
                   <div className="flex items-center gap-1.5">
                     <MessageSquare className="w-3.5 h-3.5 text-gray-400" />
-                    <span>10 comments</span>
+                    <span>{post.comments?.length || 0} comments</span>
                   </div>
                 </div>
 
                 <span className="bg-gray-100 text-gray-600 px-3 py-1 rounded-full text-[11px] font-semibold">
-                  Freelancing
+                  {post.category?.name || "General"}
                 </span>
               </div>
 
               {/* Article Content */}
-              <div className="space-y-4 text-xs md:text-sm text-gray-600 leading-relaxed">
-                <p>
-                  In today&apos;s fast-paced business world, leveraging the skills of freelancers has become an essential strategy for project success. With the rise of the gig economy, you now have access to a global pool of talented individuals ready to contribute to your endeavors. However, the key to harnessing this potential lies in selecting the right freelancer. This guide walks you through the steps to ensure you make the best choice for your project needs.
-                </p>
-                <p>
-                  Before diving into the sea of freelancers, it&apos;s crucial to have a clear understanding of what your project entails. Defining the scope of work involves outlining specific tasks, deliverables, and deadlines. A well-articulated project description not only helps you understand your own needs but also allows freelancers to accurately assess if they can fulfill your requirements.
-                </p>
-
-                {/* Highlight Quote Box */}
-                <blockquote className="my-6 p-4 rounded-xl bg-orange-50/50 border-l-4 border-orange-300 text-gray-700 text-xs italic leading-relaxed">
-                  Once you&apos;ve chosen a freelancer, ensure that there is a clear contract in place. This should outline project scope, payment terms, deadlines, and any other important details. A well-defined contract protects both you and the freelancer and sets clear expectations.
-                </blockquote>
-
-                <p>
-                  If you&apos;ve requested proposals, compare them not just on price, but also on the value each freelancer brings to the table. Look at their proposed timelines, strategies, and any additional details.
-                </p>
-                <p>
-                  Choosing the right freelancer for your project requires a thoughtful approach. By clearly defining your project, carefully searching and evaluating candidates, and ensuring a solid contractual agreement, you can establish a successful and productive working relationship. Remember, the right freelancer can not only help complete your project but also add immense value through their specialized skills and perspectives.
-                </p>
-              </div>
+              <div 
+                className="space-y-4 text-xs md:text-sm text-gray-600 leading-relaxed"
+                dangerouslySetInnerHTML={{ __html: post.content }}
+              />
 
               {/* Article Tags */}
               <div className="mt-8 pt-6 border-t border-gray-100 flex flex-wrap items-center gap-2">
-                {["Hiring Tips", "Freelancer Selection", "Project Management"].map((t, idx) => (
+                {post.tags?.map((tag, idx) => (
                   <span
                     key={idx}
                     className="text-[11px] bg-gray-100 hover:bg-gray-200 text-gray-600 font-medium px-3 py-1.5 rounded-md cursor-pointer transition-colors"
                   >
-                    {t}
+                    {tag}
                   </span>
                 ))}
               </div>
@@ -282,42 +346,37 @@ export default function BlogDetailsPage() {
 
 
             {/* Author Profile Card */}
-            <div className="bg-[#FAF7F2] p-6 rounded-2xl border border-orange-100/60 flex items-center gap-5">
-              <div className="w-16 h-16 relative rounded-full overflow-hidden shrink-0 border-2 border-white shadow-sm">
-                <Image
-                  src="https://via.placeholder.com/150/D97706/FFFFFF?text=Author"
-                  alt="Robert Hollenbeck"
-                  fill
-                  className="object-cover"
-                />
+            {post.author && (
+              <div className="bg-[#FAF7F2] p-6 rounded-2xl border border-orange-100/60 flex items-center gap-5">
+                <div className="w-16 h-16 relative rounded-full overflow-hidden shrink-0 border-2 border-white shadow-sm">
+                  <Image
+                    src={post.author.avatar || "https://via.placeholder.com/100"}
+                    alt={post.author.name || "Author"}
+                    fill
+                    className="object-cover"
+                  />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-gray-900 mb-1">
+                    Author: <span className="text-gray-800">{post.author.name || "Admin"}</span>
+                  </h3>
+                  <p className="text-xs text-gray-500 leading-relaxed">
+                    {post.author.bio || "Author bio not available."}
+                  </p>
+                </div>
               </div>
-              <div>
-                <h3 className="text-sm font-bold text-gray-900 mb-1">
-                  Author: <span className="text-gray-800">Robert Hollenbeck</span>
-                </h3>
-                <p className="text-xs text-gray-500 leading-relaxed">
-                  I am an experienced project manager and consultant with a rich background in digital project execution and freelance talent acquisition.
-                </p>
-              </div>
-            </div>
+            )}
 
 
             {/* Post Navigation Links */}
             <div className="flex flex-col sm:flex-row items-center justify-between gap-4 py-4 text-xs font-semibold text-gray-600 border-y border-gray-200/80">
-              <a href="#" className="flex items-center gap-2 hover:text-emerald-700 transition-colors">
+              <Link href="/blog" className="flex items-center gap-2 hover:text-emerald-700 transition-colors">
                 <ChevronLeft className="w-4 h-4" />
                 <div className="text-left">
-                  <span className="text-[10px] text-gray-400 block font-normal">Previous Post</span>
-                  <span>The Future of Remote Work: Trends and Predictions</span>
+                  <span className="text-[10px] text-gray-400 block font-normal">Back to Blog</span>
+                  <span>View All Articles</span>
                 </div>
-              </a>
-              <a href="#" className="flex items-center gap-2 hover:text-emerald-700 transition-colors text-right">
-                <div>
-                  <span className="text-[10px] text-gray-400 block font-normal">Next Post</span>
-                  <span>Top 10 In-Demand Skills in the Gig Economy for 2026</span>
-                </div>
-                <ChevronRight className="w-4 h-4" />
-              </a>
+              </Link>
             </div>
 
 
@@ -325,22 +384,15 @@ export default function BlogDetailsPage() {
             <div className="bg-white p-6 md:p-8 rounded-2xl border border-gray-200/80 shadow-sm space-y-6">
               <div className="flex items-center justify-between">
                 <h3 className="text-sm font-bold text-gray-900">
-                  Comments (10)
+                  Comments ({post.comments?.length || 0})
                 </h3>
-                <div className="flex items-center gap-2 text-xs text-gray-500">
-                  <span>Sort By</span>
-                  <select className="bg-gray-50 border border-gray-200 rounded px-2 py-1 text-xs focus:outline-none font-medium">
-                    <option>Recommended</option>
-                    <option>Newest</option>
-                  </select>
-                </div>
               </div>
 
               {/* Comments List */}
               <div className="space-y-4">
-                {commentsData.map((comment) => (
+                {post.comments?.map((comment: Comment, idx: number) => (
                   <div
-                    key={comment.id}
+                    key={comment._id || idx}
                     className={`p-4 rounded-xl border ${
                       comment.isAuthorReply
                         ? "bg-gray-50/80 border-gray-100 ml-6 md:ml-10"
@@ -350,7 +402,7 @@ export default function BlogDetailsPage() {
                     <div className="flex items-start gap-3">
                       <div className="w-10 h-10 relative rounded-full overflow-hidden shrink-0 bg-gray-200">
                         <Image
-                          src={comment.avatar}
+                          src={comment.avatar || "https://via.placeholder.com/100"}
                           alt={comment.name}
                           fill
                           className="object-cover"
@@ -362,9 +414,9 @@ export default function BlogDetailsPage() {
                             <h4 className="text-xs font-bold text-gray-900">
                               {comment.name}
                             </h4>
-                            {comment.role && (
+                            {comment.isAuthorReply && (
                               <span className="bg-emerald-100 text-emerald-800 text-[9px] font-bold px-2 py-0.5 rounded">
-                                {comment.role}
+                                Author
                               </span>
                             )}
                           </div>
@@ -377,24 +429,84 @@ export default function BlogDetailsPage() {
                                 <span>{comment.rating.toFixed(1)}</span>
                               </div>
                             )}
-                            <span>{comment.date}</span>
+                            <span>
+                              {new Date(comment.date).toLocaleDateString("en-GB", {
+                                day: "2-digit",
+                                month: "short",
+                                year: "numeric",
+                              })}
+                            </span>
                           </div>
                         </div>
 
                         {/* Comment Text */}
                         <p className="text-xs text-gray-600 mt-2 leading-relaxed">
-                          {comment.text}
+                          {comment.comment}
                         </p>
-
-                        {/* Reply Button */}
-                        <button className="mt-3 flex items-center gap-1 text-[11px] font-bold text-gray-500 hover:text-emerald-600 transition-colors">
-                          <CornerDownRight className="w-3 h-3" />
-                          <span>Reply</span>
-                        </button>
                       </div>
                     </div>
                   </div>
                 ))}
+              </div>
+
+              {/* Comment Form */}
+              <div className="mt-6 border-t border-gray-100 pt-6">
+                <h4 className="text-sm font-bold text-gray-900 mb-4">Leave a Comment</h4>
+                <form onSubmit={handleCommentSubmit} className="space-y-3">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-medium text-gray-700 mb-1">Name *</label>
+                      <input
+                        type="text"
+                        required
+                        value={commentData.name}
+                        onChange={(e) => setCommentData({ ...commentData, name: e.target.value })}
+                        className="w-full px-3.5 py-2 text-xs rounded-lg border border-gray-200 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-700 mb-1">Email *</label>
+                      <input
+                        type="email"
+                        required
+                        value={commentData.email}
+                        onChange={(e) => setCommentData({ ...commentData, email: e.target.value })}
+                        className="w-full px-3.5 py-2 text-xs rounded-lg border border-gray-200 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 mb-1">Rating</label>
+                    <div className="flex gap-1">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <button
+                          key={star}
+                          type="button"
+                          onClick={() => setCommentData({ ...commentData, rating: star })}
+                          className="text-amber-400"
+                        >
+                          <Star className={`w-4 h-4 ${star <= commentData.rating ? "fill-amber-400" : "fill-gray-200"}`} />
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 mb-1">Comment *</label>
+                    <textarea
+                      required
+                      rows={4}
+                      value={commentData.comment}
+                      onChange={(e) => setCommentData({ ...commentData, comment: e.target.value })}
+                      className="w-full px-3.5 py-2 text-xs rounded-lg border border-gray-200 focus:outline-none focus:ring-1 focus:ring-emerald-500 resize-none"
+                    />
+                  </div>
+                  <button
+                    type="submit"
+                    className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg transition-colors"
+                  >
+                    Post Comment
+                  </button>
+                </form>
               </div>
             </div>
 

@@ -4,27 +4,22 @@ const nextConfig = {
     remotePatterns: [
       {
         protocol: 'https',
-        hostname: 'i.ibb.co.com',
-        port: '',
-        pathname: '/**',
-      },
-      {
-        protocol: 'https',
         hostname: 'i.ibb.co',
-        port: '',
         pathname: '/**',
       },
       {
         protocol: 'https',
-        hostname: 'images.unsplash.com',
-        port: '',
+        hostname: 'i.ibb.co.com', // <--- নতুন এই হোস্টনেমটি যোগ করুন
         pathname: '/**',
       },
-      // ভবিষ্যতে Cloudinary ব্যবহার করলে এর জন্য:
       {
         protocol: 'https',
         hostname: 'res.cloudinary.com',
-        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'via.placeholder.com',
         pathname: '/**',
       },
     ],
@@ -32,3 +27,5 @@ const nextConfig = {
 };
 
 module.exports = nextConfig;
+
+
