@@ -8,6 +8,7 @@ import Requerment from "../components/Requerment";
 import Reviews from "../components/Reviews";
 import FAQAndTestimonials from "../components/FAQAndTestimonials";
 import ContactSection from "../components/ContactSection";
+import FiverrReview from "../components/FiverrReview";
 
 export default function Home() {
   return (
@@ -19,9 +20,11 @@ export default function Home() {
       <Requerment/>
     <Reviews/>
     <FAQAndTestimonials/>
+    <FiverrReview/>
     <ContactSection/>
       {/* <Services />
       <Portfolio /> */}
-    </>
+      
+</>
   );
 }

@@ -2,18 +2,23 @@ import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 
 const isDashboardRoute = createRouteMatcher(["/dashboard(.*)"]);
+const isPublicApiRoute = createRouteMatcher(["/api/fiverr-review(.*)"]); // 👈 API Route পাবলিক ঘোষণা
 
 export default clerkMiddleware(async (auth, req) => {
-  const { userId, sessionClaims } = await auth();
+  // ১. পাবলিক API রুটে সরাসরি অ্যাক্সেস অনুমতি দেওয়া হলো
+  if (isPublicApiRoute(req)) {
+    return NextResponse.next();
+  }
 
-  // ১. ইউজার ড্যাশবোর্ডে ঢুকতে চাইলে এবং লগইন না থাকলে Sign-in পেজে পাঠাবে
+  // ২. ড্যাশবোর্ড প্রোটেকশন
   if (isDashboardRoute(req)) {
+    const { userId, sessionClaims } = await auth();
+
     if (!userId) {
       const signInUrl = new URL("/sign-in", req.url);
       return NextResponse.redirect(signInUrl);
     }
 
-    // ২. metadata অথবা publicMetadata দুটোই চেক করা হচ্ছে (নিরাপত্তার জন্য)
     const userRole = 
       (sessionClaims?.metadata as { role?: string })?.role || 
       (sessionClaims?.publicMetadata as { role?: string })?.role;

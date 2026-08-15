@@ -11,7 +11,8 @@ import {
   FileText,
   Star,
   Users,
-  Handshake, // 👈 Trusted Clients এর জন্য আইকন
+  Handshake,
+  MessageSquareQuote,
   Settings,
   ArrowLeft,
 } from "lucide-react";
@@ -23,7 +24,7 @@ export default function DashboardLayout({
 }) {
   const pathname = usePathname();
 
-  // Navigation Items Array
+  // Navigation Items Array (সবগুলো href ছোট হাতের করে দেওয়া হয়েছে)
   const navItems = [
     {
       name: "Overview",
@@ -47,9 +48,14 @@ export default function DashboardLayout({
       icon: FolderKanban,
     },
     {
-      name: "Trusted Clients", // 👈 নতুন রাউট যোগ করা হয়েছে
+      name: "Trusted Clients",
       href: "/dashboard/clients",
       icon: Handshake,
+    },
+    {
+      name: "Fiverr Reviews",
+      href: "/dashboard/fiverreview", // 👈 ছোট হাতের fiverr-review করা হয়েছে
+      icon: MessageSquareQuote,
     },
     {
       name: "Review Management",
@@ -89,9 +95,10 @@ export default function DashboardLayout({
           <nav className="space-y-1.5">
             {navItems.map((item) => {
               const Icon = item.icon;
+              // Active link checking fixed
               const isActive = item.exact
                 ? pathname === item.href
-                : pathname.startsWith(item.href);
+                : pathname === item.href || pathname.startsWith(`${item.href}/`);
 
               return (
                 <Link

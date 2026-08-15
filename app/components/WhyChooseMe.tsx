@@ -13,10 +13,10 @@ interface FeatureCard {
 const features: FeatureCard[] = [
   {
     number: "01",
-    title: "500+ Completed Projects",
+    title: "600+ Completed Projects",
     description:
       "Successfully completed over 500+ projects with a strong focus on quality, accuracy, and client satisfaction.",
-    icon: <FolderCheck className="w-6 h-6" />,
+    icon: <FolderCheck className="w-5 h-5" />,
     iconBg: "bg-purple-100",
     iconColor: "text-purple-600",
   },
@@ -25,7 +25,7 @@ const features: FeatureCard[] = [
     title: "Fast Turnaround Time",
     description:
       "Receive your completed evacuation plan quickly without compromising on quality or attention to detail.",
-    icon: <Clock className="w-6 h-6" />,
+    icon: <Clock className="w-5 h-5" />,
     iconBg: "bg-red-100",
     iconColor: "text-red-500",
   },
@@ -34,7 +34,7 @@ const features: FeatureCard[] = [
     title: "Unlimited Revisions Until Approved",
     description:
       "We make revisions as needed to ensure the final plan fully meets your requirements and expectations.",
-    icon: <RefreshCw className="w-6 h-6" />,
+    icon: <RefreshCw className="w-5 h-5" />,
     iconBg: "bg-emerald-100",
     iconColor: "text-emerald-600",
   },
@@ -43,7 +43,7 @@ const features: FeatureCard[] = [
     title: "After-Sales Support",
     description:
       "Our support doesn't end at delivery—we're available to assist with updates, questions, and future modifications whenever needed.",
-    icon: <Handshake className="w-6 h-6" />,
+    icon: <Handshake className="w-5 h-5" />,
     iconBg: "bg-orange-100",
     iconColor: "text-orange-500",
   },
@@ -51,20 +51,23 @@ const features: FeatureCard[] = [
 
 export default function WhyChooseMe() {
   return (
-    <section className="bg-black text-white py-20 px-4 md:px-8 lg:px-12">
-      <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
+    <section className="bg-black text-white py-16 px-4 md:px-8 lg:px-12">
+      <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
         
         {/* Left Side Text Content */}
-        <div className="lg:col-span-4 space-y-6 text-left">
+        {/* space-y-4 কমিয়ে space-y-1 / space-y-2 করা হয়েছে */}
+        <div className="lg:col-span-4 space-y-1 text-left">
           
-          {/* Red Hand-drawn Circle Badge Effect */}
-          <div className="inline-block relative">
-            <span className="relative z-10 text-2xl md:text-3xl font-extrabold px-4 py-1.5 border-2 border-red-600 rounded-[50%] tracking-tight">
-              Why Choose Me?
-            </span>
+          {/* Transparent PNG Image Badge */}
+          <div className="inline-block">
+            <img 
+              src="/hell-Photoroom.png" 
+              alt="Why Choose Me?" 
+              className="h-14 md:h-16 w-auto object-contain block"
+            />
           </div>
 
-          <p className="text-base md:text-lg text-gray-200 font-semibold leading-relaxed">
+          <p className="text-sm md:text-base text-gray-300 font-medium leading-relaxed pt-1">
             From residential buildings to commercial facilities, we provide clear,
             code-compliant evacuation plans with fast delivery and reliable support.
           </p>
@@ -75,28 +78,28 @@ export default function WhyChooseMe() {
           {features.map((item) => (
             <div
               key={item.number}
-              className="bg-white text-black p-6 rounded-2xl relative shadow-md hover:shadow-xl transition-all duration-300 flex flex-col justify-between"
+              className="bg-white text-black p-4 rounded-xl relative shadow-md hover:shadow-lg transition-all duration-300 flex flex-col justify-between"
             >
               <div>
                 {/* Top Row: Icon & Large Number */}
-                <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center justify-between mb-3">
                   <div
-                    className={`p-3 rounded-xl ${item.iconBg} ${item.iconColor}`}
+                    className={`p-2.5 rounded-lg ${item.iconBg} ${item.iconColor}`}
                   >
                     {item.icon}
                   </div>
-                  <span className="text-3xl font-extrabold text-gray-200 select-none">
+                  <span className="text-2xl font-black text-gray-300 select-none">
                     {item.number}
                   </span>
                 </div>
 
                 {/* Title */}
-                <h3 className="text-base font-bold text-gray-900 leading-snug mb-3">
+                <h3 className="text-sm font-bold text-gray-900 leading-snug mb-1.5">
                   {item.title}
                 </h3>
 
                 {/* Description */}
-                <p className="text-xs text-gray-500 leading-relaxed font-medium">
+                <p className="text-[11px] text-gray-500 leading-normal font-medium">
                   {item.description}
                 </p>
               </div>

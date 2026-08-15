@@ -78,7 +78,7 @@ export default function FAQAndTestimonials() {
           <div className="lg:col-span-5 grid grid-cols-2 gap-4">
             <div className="relative aspect-square rounded-2xl overflow-hidden shadow-sm">
               <Image
-                src="/evacuation-plan-1.jpg" // আপনার ইমেজের পাথ দিন
+                src="/eva1.jpeg" // আপনার ইমেজের পাথ দিন
                 alt="Evacuation Plan 1"
                 fill
                 className="object-cover"
@@ -86,7 +86,7 @@ export default function FAQAndTestimonials() {
             </div>
             <div className="relative aspect-square rounded-2xl overflow-hidden shadow-sm">
               <Image
-                src="/evacuation-plan-2.jpg"
+                src="/eva1.jpeg"
                 alt="Evacuation Plan 2"
                 fill
                 className="object-cover"
@@ -94,7 +94,7 @@ export default function FAQAndTestimonials() {
             </div>
             <div className="relative aspect-square rounded-2xl overflow-hidden shadow-sm">
               <Image
-                src="/evacuation-plan-3.jpg"
+                src="/eva1.jpeg"
                 alt="Evacuation Plan 3"
                 fill
                 className="object-cover"
@@ -102,7 +102,7 @@ export default function FAQAndTestimonials() {
             </div>
             <div className="relative aspect-square rounded-2xl overflow-hidden shadow-sm">
               <Image
-                src="/evacuation-plan-4.jpg"
+                src="/eva1.jpeg"
                 alt="Evacuation Plan 4"
                 fill
                 className="object-cover"
