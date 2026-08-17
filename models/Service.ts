@@ -22,6 +22,9 @@ const ServiceSchema = new Schema(
     aboutGig: { type: String, required: [true, "About Gig is required"] },
     whyWorkWithMe: { type: String, default: "" },
 
+    // ✅ RECENT WORKS (আপনার প্রজেক্টের ইমেজগুলো এখানে সেভ হবে)
+    recentWorks: [{ type: String }], 
+
     // Packages (Optional Structure)
     basicPackage: { type: PackageSchema, default: {} },
     standardPackage: { type: PackageSchema, default: {} },

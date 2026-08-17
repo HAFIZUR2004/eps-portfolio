@@ -15,6 +15,7 @@ import {
   MessageSquareQuote,
   Settings,
   ArrowLeft,
+  LayoutTemplate, // 👈 Hero Section-এর জন্য নতুন আইকন import করা হয়েছে
 } from "lucide-react";
 
 export default function DashboardLayout({
@@ -24,13 +25,18 @@ export default function DashboardLayout({
 }) {
   const pathname = usePathname();
 
-  // Navigation Items Array (সবগুলো href ছোট হাতের করে দেওয়া হয়েছে)
+  // Navigation Items Array
   const navItems = [
     {
       name: "Overview",
       href: "/dashboard",
       icon: LayoutDashboard,
       exact: true,
+    },
+    {
+      name: "Hero Section", // 👈 Hero Management এখানে যুক্ত করা হয়েছে
+      href: "/dashboard/hero",
+      icon: LayoutTemplate,
     },
     {
       name: "Services",
@@ -54,7 +60,7 @@ export default function DashboardLayout({
     },
     {
       name: "Fiverr Reviews",
-      href: "/dashboard/fiverreview", // 👈 ছোট হাতের fiverr-review করা হয়েছে
+      href: "/dashboard/fiverreview",
       icon: MessageSquareQuote,
     },
     {
@@ -95,7 +101,7 @@ export default function DashboardLayout({
           <nav className="space-y-1.5">
             {navItems.map((item) => {
               const Icon = item.icon;
-              // Active link checking fixed
+              // Active link checking
               const isActive = item.exact
                 ? pathname === item.href
                 : pathname === item.href || pathname.startsWith(`${item.href}/`);

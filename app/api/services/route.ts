@@ -28,6 +28,11 @@ export async function POST(req: Request) {
       ? body.galleryImages.filter((img: string) => typeof img === "string" && img.trim() !== "")
       : [];
 
+    // ✅ recentWorks যোগ করা
+    const recentWorks = Array.isArray(body.recentWorks)
+      ? body.recentWorks.filter((img: string) => typeof img === "string" && img.trim() !== "")
+      : [];
+
     const newService = await Service.create({
       title: body.title,
       rating: String(body.rating || "5.0"),
@@ -36,6 +41,7 @@ export async function POST(req: Request) {
       galleryImages,
       aboutGig: body.aboutGig,
       whyWorkWithMe: body.whyWorkWithMe || "",
+      recentWorks, // ✅ যোগ করা হয়েছে
       
       basicPackage: {
         price: body.basicPrice || "",

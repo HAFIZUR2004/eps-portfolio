@@ -3,7 +3,12 @@
 import React, { useState, useEffect, use } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Star, ChevronRight, Check, Loader2 } from "lucide-react";
+import {
+  Star,
+  ChevronRight,
+  Check,
+  Loader2,
+} from "lucide-react";
 
 interface PackageDetail {
   price?: string;
@@ -29,8 +34,11 @@ interface ServiceData {
   basicPackage?: PackageDetail;
   standardPackage?: PackageDetail;
   premiumPackage?: PackageDetail;
-  recentWorks?: string[];
-  faqs?: { question: string; answer: string }[];
+  faqs?: {
+    question: string;
+    answer: string;
+  }[];
+  category?: string;
 }
 
 export default function ServiceDetailPage({
@@ -41,24 +49,41 @@ export default function ServiceDetailPage({
   const resolvedParams = use(params);
   const serviceId = resolvedParams.id;
 
+  // ============================================================
+  // STATES
+  // ============================================================
+
   const [service, setService] = useState<ServiceData | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  
+  // ✅ Other Services (যেগুলো ইমেজ হিসেবে দেখাবে)
+  const [otherServices, setOtherServices] = useState<ServiceData[]>([]);
+  const [loadingOther, setLoadingOther] = useState<boolean>(true);
 
   const [selectedImage, setSelectedImage] = useState<string>("");
-  const [selectedPackage, setSelectedPackage] = useState<
-    "basic" | "standard" | "premium"
-  >("basic");
+  const [selectedPackage, setSelectedPackage] = useState<"basic" | "standard" | "premium">("basic");
   const [quantity, setQuantity] = useState<string>("1");
   const [openFaq, setOpenFaq] = useState<number | null>(null);
+  const [isBioExpanded, setIsBioExpanded] = useState<boolean>(false);
+
+  // ============================================================
+  // FETCH SERVICE DETAILS
+  // ============================================================
 
   useEffect(() => {
     const fetchServiceDetail = async () => {
       try {
         setLoading(true);
-        const res = await fetch(`/api/services/${serviceId}`);
+        setError(null);
 
-        if (!res.ok) throw new Error("Failed to fetch service details");
+        const res = await fetch(`/api/services/${serviceId}`, {
+          cache: "no-store",
+        });
+
+        if (!res.ok) {
+          throw new Error("Failed to fetch service details");
+        }
 
         const data = await res.json();
 
@@ -80,27 +105,65 @@ export default function ServiceDetailPage({
       }
     };
 
-    if (serviceId) fetchServiceDetail();
+    if (serviceId) {
+      fetchServiceDetail();
+    }
   }, [serviceId]);
+
+  // ============================================================
+  // ✅ FETCH OTHER SERVICES (শুধু ইমেজ দেখানোর জন্য)
+  // ============================================================
+
+  useEffect(() => {
+    const fetchOtherServices = async () => {
+      if (!serviceId) return;
+      try {
+        setLoadingOther(true);
+        const res = await fetch("/api/services", { cache: "no-store" });
+        if (!res.ok) throw new Error("Failed to fetch services");
+        const data = await res.json();
+        if (data?.success && Array.isArray(data.services)) {
+          // বর্তমান সার্ভিস বাদ দিয়ে অন্য ৪টি সার্ভিস নিবে
+          const others = data.services
+            .filter((s: ServiceData) => s._id !== serviceId)
+            .slice(0, 4);
+          setOtherServices(others);
+        }
+      } catch (error) {
+        console.error("Error fetching other services:", error);
+      } finally {
+        setLoadingOther(false);
+      }
+    };
+    fetchOtherServices();
+  }, [serviceId]);
+
+  // ============================================================
+  // LOADING
+  // ============================================================
 
   if (loading) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-[#F8F6F2] gap-3">
-        <Loader2 className="w-8 h-8 text-[#006A4E] animate-spin" />
-        <p className="text-gray-600 text-sm font-medium">Loading details...</p>
+      <div className="flex min-h-screen flex-col items-center justify-center gap-3 bg-[#F8F6F2]">
+        <Loader2 className="h-8 w-8 animate-spin text-[#006A4E]" />
+        <p className="text-sm font-medium text-gray-600">Loading details...</p>
       </div>
     );
   }
 
+  // ============================================================
+  // ERROR
+  // ============================================================
+
   if (error || !service) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-[#F8F6F2] p-4 text-center">
-        <h2 className="text-xl font-bold text-gray-800 mb-2">
+      <div className="flex min-h-screen flex-col items-center justify-center bg-[#F8F6F2] p-4 text-center">
+        <h2 className="mb-2 text-xl font-bold text-gray-800">
           {error || "Service Not Found"}
         </h2>
         <Link
           href="/services"
-          className="text-sm bg-[#006A4E] text-white px-5 py-2.5 rounded-xl font-medium"
+          className="rounded-xl bg-[#006A4E] px-5 py-2.5 text-sm font-medium text-white transition hover:bg-[#075631]"
         >
           Back to Services
         </Link>
@@ -108,16 +171,22 @@ export default function ServiceDetailPage({
     );
   }
 
+  // ============================================================
+  // GALLERY
+  // ============================================================
+
   const galleryImages =
     service.images && service.images.length > 0
       ? service.images
       : [service.mainImage || "/placeholder.jpg"];
 
+  // ============================================================
+  // PACKAGES
+  // ============================================================
+
   const packagesInfo = {
     basic: {
-      price: service.basicPackage?.price
-        ? `$${service.basicPackage.price}`
-        : "$10",
+      price: service.basicPackage?.price ? `$${service.basicPackage.price}` : "$10",
       title: service.basicPackage?.title || "Small Building Evacuation Plan",
       desc: service.basicPackage?.desc || "Single Floor • Up to 1,000 sq. ft.",
       delivery: service.basicPackage?.delivery || "1 Day Delivery",
@@ -125,45 +194,38 @@ export default function ServiceDetailPage({
       coverage: service.basicPackage?.coverage || "1,000 sq. ft.",
     },
     standard: {
-      price: service.standardPackage?.price
-        ? `$${service.standardPackage.price}`
-        : "$25",
-      title:
-        service.standardPackage?.title || "Medium Building Evacuation Plan",
-      desc:
-        service.standardPackage?.desc || "Up to 2 Floors • Up to 2,500 sq. ft.",
+      price: service.standardPackage?.price ? `$${service.standardPackage.price}` : "$25",
+      title: service.standardPackage?.title || "Medium Building Evacuation Plan",
+      desc: service.standardPackage?.desc || "Up to 2 Floors • Up to 2,500 sq. ft.",
       delivery: service.standardPackage?.delivery || "2 Day Delivery",
       revisions: service.standardPackage?.revisions || "Unlimited Revisions",
       coverage: service.standardPackage?.coverage || "2,500 sq. ft.",
     },
     premium: {
-      price: service.premiumPackage?.price
-        ? `$${service.premiumPackage.price}`
-        : "$50",
+      price: service.premiumPackage?.price ? `$${service.premiumPackage.price}` : "$50",
       title: service.premiumPackage?.title || "Large Complex Evacuation Plan",
-      desc:
-        service.premiumPackage?.desc ||
-        "Multi-story / Large Factory • Up to 5,000 sq. ft.",
+      desc: service.premiumPackage?.desc || "Multi-story / Large Factory • Up to 5,000 sq. ft.",
       delivery: service.premiumPackage?.delivery || "3 Day Delivery",
       revisions: service.premiumPackage?.revisions || "Unlimited Revisions",
       coverage: service.premiumPackage?.coverage || "5,000 sq. ft.",
     },
   };
 
+  // ============================================================
+  // FAQ
+  // ============================================================
+
   const faqs =
     service.faqs && service.faqs.length > 0
       ? service.faqs
       : [
           {
-            question:
-              "Do you offer assistance after the order has been completed?",
-            answer:
-              "Yes, we provide post-delivery assistance for minor updates and revisions.",
+            question: "Do you offer assistance after the order has been completed?",
+            answer: "Yes, we provide post-delivery assistance for minor updates and revisions.",
           },
           {
             question: "Can I choose my favorite Product category or Niche?",
-            answer:
-              "Absolutely! You can provide specific instructions, colors, or safety guidelines.",
+            answer: "Absolutely! You can provide specific instructions, colors, or safety guidelines.",
           },
           {
             question: "Can I add products myself?",
@@ -171,10 +233,13 @@ export default function ServiceDetailPage({
           },
           {
             question: "Are there any additional or hidden charges?",
-            answer:
-              "No, the price you see is the final price unless you require a completely new floor plan design from scratch.",
+            answer: "No, the price you see is the final price unless you require a completely new floor plan design from scratch.",
           },
         ];
+
+  // ============================================================
+  // WHY WORK WITH ME
+  // ============================================================
 
   const whyWorkItems = [
     "Flexibility and Customization",
@@ -182,100 +247,106 @@ export default function ServiceDetailPage({
     "Direct Communication",
   ];
 
+  // ============================================================
+  // ABOUT ME TEXT
+  // ============================================================
+
+  const defaultBio =
+    "I am a professional graphic designer & artisan, with over 15 years of experience in fire safety plans and site diagrams.";
+  const bioText = service.sellerBio || defaultBio;
+  const bioLimit = 120;
+  const isBioLong = bioText.length > bioLimit;
+  const displayedBio = isBioExpanded || !isBioLong ? bioText : `${bioText.slice(0, bioLimit)}...`;
+
+  // ============================================================
+  // PAGE
+  // ============================================================
+
   return (
-    <div className="bg-[#F8F6F2] min-h-screen text-gray-800 pb-20">
-      <div className="bg-[#EFECE6] border-b border-gray-200/80 py-6 px-4 sm:px-8">
-        <div className="max-w-7xl mx-auto">
-          <p className="text-xs text-gray-500 mb-2 flex items-center gap-1">
-            <Link href="/services" className="hover:underline">
+    <div className="min-h-screen bg-[#F8F6F2] pb-20 text-gray-800">
+      {/* ========================================================
+          PAGE HEADER
+      ========================================================= */}
+      <div className="border-b border-gray-200/80 bg-[#EFECE6] px-4 py-6 sm:px-8">
+        <div className="mx-auto max-w-7xl">
+          <p className="mb-2 flex items-center gap-1 text-xs text-gray-500">
+            <Link href="/services" className="transition hover:text-[#006A4E] hover:underline">
               Services
             </Link>
-            <ChevronRight className="w-3 h-3 text-gray-400" /> Detail
+            <ChevronRight className="h-3 w-3 text-gray-400" />
+            <span>Detail</span>
           </p>
-          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 leading-tight">
+          <h1 className="text-xl font-bold leading-tight text-gray-900 sm:text-2xl md:text-3xl">
             {service.title ||
               "We will design professional fire emergency evacuation plan, exit plan and safety plan."}
           </h1>
-          <div className="flex items-center gap-1.5 mt-2">
-            <Star className="w-4 h-4 fill-amber-500 text-amber-500" />
-            <span className="text-xs font-bold text-gray-900">
-              {service.rating ?? "5.0"}
-            </span>
-            <span className="text-xs text-gray-500">
-              ({service.reviewsCount ?? 0} Reviews)
-            </span>
+          <div className="mt-2 flex items-center gap-1.5">
+            <Star className="h-4 w-4 fill-amber-500 text-amber-500" />
+            <span className="text-xs font-bold text-gray-900">{service.rating ?? "5.0"}</span>
+            <span className="text-xs text-gray-500">({service.reviewsCount ?? 0} Reviews)</span>
           </div>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8 grid grid-cols-1 lg:grid-cols-3 gap-10">
-        <div className="lg:col-span-2 space-y-8">
-          <div className="relative w-full h-[320px] sm:h-[400px] md:h-[450px] bg-gray-200 rounded-xl overflow-hidden border border-gray-300 shadow-sm">
-            <div className="absolute top-4 left-4 bg-[#096b43] text-white px-3 py-1.5 rounded-l-full rounded-r-full text-xs font-bold shadow-md z-10 leading-tight">
-              ENGLISH <br /> LANGUAGE
-            </div>
-            <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-[#096b43] text-white px-6 py-2 rounded-full text-sm font-bold shadow-md text-center z-10">
-              EMERGENCY EVACUATION PLAN DESIGN
-              <div className="text-[9px] md:text-[10px] font-normal mt-0.5 opacity-90">
-                Premium Quality | Unlimited Revisions | Lifetime Support
-              </div>
-            </div>
-
+      {/* ========================================================
+          MAIN CONTENT
+      ========================================================= */}
+      <div className="mx-auto mt-8 grid max-w-7xl grid-cols-1 gap-10 px-4 sm:px-6 lg:grid-cols-3 lg:px-8">
+        {/* ======================================================
+            LEFT CONTENT
+        ======================================================= */}
+        <div className="space-y-8 lg:col-span-2">
+          {/* MAIN IMAGE */}
+          <div className="relative h-[320px] w-full overflow-hidden rounded-xl border border-gray-300 bg-gray-200 shadow-sm sm:h-[400px] md:h-[450px]">
             <Image
-              src={selectedImage}
+              src={selectedImage || "/placeholder.jpg"}
               alt={service.title || "Service Preview"}
               fill
+              priority
               className="object-contain md:object-cover"
               sizes="(max-width: 1200px) 100vw, 66vw"
             />
           </div>
 
+          {/* GALLERY THUMBNAILS */}
           {galleryImages.length > 1 && (
             <div className="flex items-center gap-3 overflow-x-auto pb-1">
               {galleryImages.map((img, idx) => (
                 <button
                   key={idx}
+                  type="button"
                   onClick={() => setSelectedImage(img)}
-                  className={`relative w-24 h-14 md:w-28 md:h-16 rounded overflow-hidden flex-shrink-0 border-2 transition-all bg-white ${
-                    selectedImage === img
-                      ? "border-[#096b43]"
-                      : "border-gray-300 opacity-70 hover:opacity-100"
+                  className={`relative h-14 w-24 flex-shrink-0 overflow-hidden rounded border-2 bg-white transition-all md:h-16 md:w-28 ${
+                    selectedImage === img ? "border-[#096b43]" : "border-gray-300 opacity-70 hover:opacity-100"
                   }`}
                 >
-                  <Image
-                    src={img}
-                    alt={`Thumb ${idx}`}
-                    fill
-                    className="object-cover"
-                  />
+                  <Image src={img} alt={`Thumbnail ${idx + 1}`} fill className="object-cover" />
                 </button>
               ))}
             </div>
           )}
 
-          <div className="bg-white p-6 md:p-8 rounded-lg border border-gray-200 shadow-sm space-y-3">
-            <h2 className="text-[17px] font-bold text-gray-900">
-              About this Gig
-            </h2>
-            <p className="text-[14px] text-gray-700 leading-relaxed whitespace-pre-line">
+          {/* ABOUT THIS GIG */}
+          <div className="space-y-3 rounded-lg border border-gray-200 bg-white p-6 shadow-sm md:p-8">
+            <h2 className="text-[17px] font-bold text-gray-900">About this Gig</h2>
+            <p className="whitespace-pre-line text-[14px] leading-relaxed text-gray-700">
               {service.aboutGig ||
                 "Professional emergency evacuation planning tailored to your exact floor plans and local compliance guidelines."}
             </p>
           </div>
 
-          <div className="bg-white p-6 md:p-8 rounded-lg border border-gray-200 shadow-sm space-y-3">
-            <h2 className="text-[17px] font-bold text-gray-900">
-              Why Work With Me
-            </h2>
-            <p className="text-[14px] text-gray-700 leading-relaxed mb-2">
+          {/* WHY WORK WITH ME */}
+          <div className="space-y-3 rounded-lg border border-gray-200 bg-white p-6 shadow-sm md:p-8">
+            <h2 className="text-[17px] font-bold text-gray-900">Why Work With Me</h2>
+            <p className="mb-2 text-[14px] leading-relaxed text-gray-700">
               {service.whyWorkWithMe ||
                 "Experienced CAD designer specializing in fire safety, site plans, and evacuation mapping."}
             </p>
             <ul className="space-y-1.5 text-[14px] text-gray-700">
               {whyWorkItems.map((item, index) => (
                 <li key={index} className="flex items-center gap-2.5">
-                  <span className="bg-[#096b43] rounded-full p-0.5 text-white">
-                    <Check className="w-3 h-3" />
+                  <span className="rounded-full bg-[#096b43] p-0.5 text-white">
+                    <Check className="h-3 w-3" />
                   </span>
                   {item}
                 </li>
@@ -283,27 +354,22 @@ export default function ServiceDetailPage({
             </ul>
           </div>
 
-          <div className="bg-white p-6 md:p-8 rounded-lg border border-gray-200 shadow-sm space-y-4">
-            <h2 className="text-[17px] font-bold text-gray-900 mb-4">FAQ</h2>
+          {/* FAQ */}
+          <div className="space-y-4 rounded-lg border border-gray-200 bg-white p-6 shadow-sm md:p-8">
+            <h2 className="mb-4 text-[17px] font-bold text-gray-900">FAQ</h2>
             <div className="space-y-2">
               {faqs.map((faq, index) => (
-                <div
-                  key={index}
-                  className="border border-gray-100 rounded-lg bg-[#fafafa] overflow-hidden"
-                >
+                <div key={index} className="overflow-hidden rounded-lg border border-gray-100 bg-[#fafafa]">
                   <button
-                    onClick={() =>
-                      setOpenFaq(openFaq === index ? null : index)
-                    }
-                    className="w-full flex items-center justify-between text-left p-3.5 font-medium text-[14px] text-gray-800 hover:text-[#096b43] transition-colors"
+                    type="button"
+                    onClick={() => setOpenFaq(openFaq === index ? null : index)}
+                    className="flex w-full items-center justify-between p-3.5 text-left text-[14px] font-medium text-gray-800 transition-colors hover:text-[#096b43]"
                   >
                     <span>{faq.question}</span>
-                    <span className="text-gray-400 text-lg">
-                      {openFaq === index ? "−" : "+"}
-                    </span>
+                    <span className="text-lg text-gray-400">{openFaq === index ? "−" : "+"}</span>
                   </button>
                   {openFaq === index && (
-                    <p className="text-[13px] text-gray-600 px-3.5 pb-3.5 pt-1 leading-relaxed border-t border-gray-100 bg-white">
+                    <p className="border-t border-gray-100 bg-white px-3.5 pb-3.5 pt-1 text-[13px] leading-relaxed text-gray-600">
                       {faq.answer}
                     </p>
                   )}
@@ -312,89 +378,92 @@ export default function ServiceDetailPage({
             </div>
           </div>
 
-          <div className="bg-white p-6 md:p-8 rounded-lg border border-gray-200 shadow-sm space-y-4">
-            <h2 className="text-[17px] font-bold text-gray-900 mb-4">
-              Recent Works
-            </h2>
-            <div className="flex gap-3 overflow-x-auto pb-2">
-              {(service.recentWorks || [1, 2, 3, 4]).map((item, i) => (
-                <div
-                  key={i}
-                  className="w-28 h-20 bg-gray-200 rounded border border-gray-300 flex-shrink-0 relative overflow-hidden"
-                >
-                  {typeof item === "string" ? (
-                    <Image
-                      src={item}
-                      alt={`Recent Work ${i}`}
-                      fill
-                      className="object-cover"
-                    />
-                  ) : (
-                    <div className="w-full h-full bg-gray-300 flex items-center justify-center text-[10px] text-gray-500">
-                      Project {item}
-                    </div>
-                  )}
-                </div>
-              ))}
+          {/* ====================================================
+              ✅ RECENT PROJECTS (শুধু ইমেজ দেখাবে)
+          ===================================================== */}
+          <div className="space-y-4 rounded-lg border border-gray-200 bg-white p-6 shadow-sm md:p-8">
+            <div className="flex items-center justify-between">
+              <h2 className="text-[17px] font-bold text-gray-900">Recent Projects</h2>
+              <Link href="/services" className="text-xs font-semibold text-[#006A4E] hover:underline">
+                View All
+              </Link>
             </div>
+
+            {loadingOther ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="h-6 w-6 animate-spin text-[#006A4E]" />
+              </div>
+            ) : otherServices.length > 0 ? (
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                {otherServices.map((item) => (
+                  <Link
+                    key={item._id}
+                    href={`/services/${item._id}`}
+                    className="group relative aspect-square overflow-hidden rounded-lg border border-gray-200 bg-gray-200 transition hover:border-[#096b43] hover:shadow-md"
+                  >
+                    <Image
+                      src={item.mainImage || "/placeholder.jpg"}
+                      alt={item.title || "Project"}
+                      fill
+                      className="object-cover transition-transform duration-300 group-hover:scale-105"
+                      sizes="(max-width: 640px) 50vw, 25vw"
+                    />
+                  </Link>
+                ))}
+              </div>
+            ) : (
+              <div className="rounded-lg border border-dashed border-gray-300 bg-gray-50 px-4 py-8 text-center">
+                <p className="text-sm text-gray-500">No projects available.</p>
+              </div>
+            )}
           </div>
         </div>
 
+        {/* ======================================================
+            RIGHT SIDEBAR
+        ======================================================= */}
         <div className="space-y-6">
-          <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden sticky top-6">
-            <div className="bg-[#096b43] text-white text-center py-4">
-              <div className="text-sm font-light mb-0.5">Price</div>
-              <div className="text-3xl font-bold">
-                {packagesInfo[selectedPackage].price}
-              </div>
+          {/* PACKAGE CARD */}
+          <div className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
+            <div className="bg-[#096b43] py-4 text-center text-white">
+              <div className="mb-0.5 text-sm font-light">Price</div>
+              <div className="text-3xl font-bold">{packagesInfo[selectedPackage].price}</div>
             </div>
-
-            <div className="p-5 border-b border-gray-200">
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                Quantity
-              </label>
+            <div className="border-b border-gray-200 p-5">
+              <label className="mb-1.5 block text-sm font-medium text-gray-700">Quantity</label>
               <select
                 value={quantity}
                 onChange={(e) => setQuantity(e.target.value)}
-                className="w-full border border-gray-300 rounded p-2 text-sm bg-white focus:outline-none focus:border-[#096b43]"
+                className="w-full rounded border border-gray-300 bg-white p-2 text-sm focus:border-[#096b43] focus:outline-none"
               >
                 <option value="1">1 Evacuation plan</option>
                 <option value="2">2 Evacuation plans</option>
                 <option value="3">3 Evacuation plans</option>
               </select>
             </div>
-
             <div className="p-5">
-              <h3 className="font-bold text-[15px] text-gray-900 mb-3">
-                Packages
-              </h3>
+              <h3 className="mb-3 text-[15px] font-bold text-gray-900">Packages</h3>
               <div className="space-y-3">
                 {(["basic", "standard", "premium"] as const).map((pkgKey) => (
-                  <label
-                    key={pkgKey}
-                    className="flex items-start gap-3 cursor-pointer group"
-                  >
+                  <label key={pkgKey} className="group flex cursor-pointer items-start gap-3">
                     <input
                       type="radio"
                       name="package"
                       value={pkgKey}
                       checked={selectedPackage === pkgKey}
                       onChange={() => setSelectedPackage(pkgKey)}
-                      className="mt-1 w-4 h-4 text-[#096b43] focus:ring-[#096b43]"
+                      className="mt-1 h-4 w-4 text-[#096b43] focus:ring-[#096b43]"
                     />
                     <div
-                      className={`flex-1 border rounded p-3 transition-all ${
+                      className={`flex-1 rounded border p-3 transition-all ${
                         selectedPackage === pkgKey
                           ? "border-[#096b43] bg-[#f9fdfb]"
                           : "border-gray-200 group-hover:border-gray-300"
                       }`}
                     >
-                      <p className="font-semibold text-[14px] text-gray-900 capitalize">
-                        {pkgKey} Package
-                      </p>
-                      <p className="text-xs text-gray-500 mt-0.5">
-                        {packagesInfo[pkgKey].delivery} |{" "}
-                        {packagesInfo[pkgKey].revisions} |{" "}
+                      <p className="text-[14px] font-semibold capitalize text-gray-900">{pkgKey} Package</p>
+                      <p className="mt-0.5 text-xs text-gray-500">
+                        {packagesInfo[pkgKey].delivery} | {packagesInfo[pkgKey].revisions} |{" "}
                         {packagesInfo[pkgKey].coverage}
                       </p>
                     </div>
@@ -402,55 +471,59 @@ export default function ServiceDetailPage({
                 ))}
               </div>
             </div>
-
-            <div className="p-5 border-t border-gray-200 bg-[#fafafa]">
-              <p className="font-semibold text-[14px] text-gray-900 mb-1">
-                Brief: {packagesInfo[selectedPackage].title}
-              </p>
-              <p className="text-xs text-gray-500 mb-3 leading-relaxed">
-                {packagesInfo[selectedPackage].desc}
-              </p>
-
-              <div className="bg-[#fdf3e9] text-[#9c5c1f] text-xs p-3 rounded border border-[#f9dcca] mb-4">
-                <span className="font-bold block mb-0.5">Note:</span>
-                If the floor plan needs to be re-created or designed based on
-                JPEG images, scanned drawings, or project vision, an additional
-                charge will apply due to the extra time and drafting work
-                involved.
+            <div className="border-t border-gray-200 bg-[#fafafa] p-5">
+              <p className="mb-1 text-[14px] font-semibold text-gray-900">Brief: {packagesInfo[selectedPackage].title}</p>
+              <p className="mb-3 text-xs leading-relaxed text-gray-500">{packagesInfo[selectedPackage].desc}</p>
+              <div className="mb-4 rounded border border-[#f9dcca] bg-[#fdf3e9] p-3 text-xs text-[#9c5c1f]">
+                <span className="mb-0.5 block font-bold">Note:</span>
+                If the floor plan needs to be re-created or designed based on JPEG images, scanned drawings, or project
+                vision, an additional charge will apply due to the extra time and drafting work involved.
               </div>
-
-              <button className="w-full bg-[#096b43] text-white font-medium py-2.5 rounded hover:bg-[#075631] transition shadow-sm text-sm">
+              <button
+                type="button"
+                className="w-full rounded bg-[#096b43] py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-[#075631]"
+              >
                 Continue
               </button>
             </div>
           </div>
 
-          <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-5">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="w-12 h-12 rounded-full overflow-hidden bg-gray-200 relative shrink-0">
+          {/* SELLER CARD */}
+          <div className="rounded-lg border border-gray-200 bg-white p-5 shadow-sm">
+            <div className="mb-4 flex items-center gap-3">
+              <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-full bg-gray-200">
                 <Image
                   src={service.sellerImage || "/placeholder.jpg"}
                   alt={service.sellerName || "Seller"}
                   fill
+                  sizes="48px"
                   className="object-cover"
                 />
               </div>
               <div>
-                <p className="font-bold text-gray-900 text-sm">
-                  {service.sellerName || "Sabbir Hossain"}
-                </p>
+                <p className="text-sm font-bold text-gray-900">{service.sellerName || "Sabbir Hossain"}</p>
                 <p className="text-xs text-gray-500">Service Provider</p>
               </div>
             </div>
-
-            <div className="text-[13px] text-gray-700 leading-relaxed mb-4">
-              <p>
-                {service.sellerBio ||
-                  "I am a professional graphic designer & artisan, with over 15 years of experience in fire safety plans and site diagrams."}
-              </p>
+            <div className="mb-4 rounded-lg bg-[#f8f8f8] p-4">
+              <h4 className="mb-1.5 text-[14px] font-bold text-gray-900">About Me</h4>
+              <div className="text-[13px] leading-relaxed text-gray-700">
+                <p>{displayedBio}</p>
+              </div>
+              {isBioLong && (
+                <button
+                  type="button"
+                  onClick={() => setIsBioExpanded(!isBioExpanded)}
+                  className="mt-2 text-[13px] font-semibold text-[#006A4E] hover:underline focus:outline-none"
+                >
+                  {isBioExpanded ? "Read Less" : "Read More"}
+                </button>
+              )}
             </div>
-
-            <button className="w-full bg-[#096b43] text-white font-medium py-2.5 rounded hover:bg-[#075631] transition shadow-sm text-sm">
+            <button
+              type="button"
+              className="w-full rounded bg-[#006A4E] py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-[#075631]"
+            >
               Contact Me
             </button>
           </div>
