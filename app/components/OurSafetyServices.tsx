@@ -92,7 +92,7 @@ export default function OurSafetyServices() {
   };
 
   return (
-    <section className="bg-[#f7f5f2] px-4 py-16">
+    <section className="bg-[#f7f5f2] px-4 -py-16">
       <div className="mx-auto max-w-6xl">
         {/* =====================================================
             SECTION HEADING

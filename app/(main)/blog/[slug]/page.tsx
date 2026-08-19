@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useParams } from "next/navigation";
+import { useUser } from "@clerk/nextjs";
 import {
   Search,
   List,
@@ -18,9 +19,13 @@ import {
   CornerDownRight,
   Loader2,
 } from "lucide-react";
+import { formatDistanceToNow } from "date-fns";
+import { bn } from "date-fns/locale";
 
+// Comment ইন্টারফেস
 interface Comment {
   _id?: string;
+  userId: string;
   name: string;
   email?: string;
   comment: string;
@@ -30,6 +35,7 @@ interface Comment {
   avatar?: string;
 }
 
+// Blog Post ইন্টারফেস
 interface BlogPost {
   _id: string;
   title: string;
@@ -53,6 +59,7 @@ interface BlogPost {
   updatedAt: string;
 }
 
+// Category ইন্টারফেস
 interface Category {
   _id: string;
   name: string;
@@ -60,6 +67,7 @@ interface Category {
   count: number;
 }
 
+// Recent Post ইন্টারফেস
 interface RecentPost {
   _id: string;
   title: string;
@@ -72,9 +80,23 @@ interface RecentPost {
   createdAt: string;
 }
 
+// সেফ ডেট ফরম্যাট ফাংশন
+function formatCommentDate(dateString?: string) {
+  if (!dateString) return "Just now";
+  try {
+    const date = new Date(dateString);
+    // চেক করুন ডেটা ভ্যালিড কিনা
+    if (isNaN(date.getTime())) return "Just now";
+    return formatDistanceToNow(date, { addSuffix: true, locale: bn });
+  } catch {
+    return "Just now";
+  }
+}
+
 export default function BlogDetailsPage() {
   const params = useParams();
   const slug = params.slug as string;
+  const { user, isLoaded, isSignedIn } = useUser();
   
   const [post, setPost] = useState<BlogPost | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -82,12 +104,9 @@ export default function BlogDetailsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
-  const [commentData, setCommentData] = useState({
-    name: "",
-    email: "",
-    comment: "",
-    rating: 5,
-  });
+  const [commentText, setCommentText] = useState("");
+  const [commentRating, setCommentRating] = useState(5);
+  const [submitting, setSubmitting] = useState(false);
 
   // Fetch all data
   useEffect(() => {
@@ -120,37 +139,47 @@ export default function BlogDetailsPage() {
   }, [slug]);
 
   // Handle comment submission
-  const handleCommentSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!post) return;
+const handleCommentSubmit = async () => {
+  if (!comment.trim()) {
+    return;
+  }
 
-    try {
-      const res = await fetch(`/api/blogs/${slug}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: commentData.name,
-          email: commentData.email,
-          comment: commentData.comment,
-          rating: commentData.rating,
-          date: new Date().toISOString(),
-        }),
-      });
+  try {
+    setSubmitting(true);
 
-      if (res.ok) {
-        const updatedPost = await res.json();
-        setPost(updatedPost);
-        setCommentData({ name: "", email: "", comment: "", rating: 5 });
-        alert("Comment added successfully!");
-      } else {
-        alert("Failed to add comment");
-      }
-    } catch (err) {
-      console.error("Comment error:", err);
+    const res = await fetch(`/api/blogs/${slug}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        comment: comment.trim(),
+        rating: rating,
+      }),
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      throw new Error(data.error || "Failed to submit comment");
     }
-  };
 
-  if (loading) {
+    // Update blog post with new comment
+    setPost(data);
+
+    // Clear form
+    setComment("");
+    setRating(5);
+
+    console.log("Comment submitted successfully");
+  } catch (error) {
+    console.error("Comment submit error:", error);
+  } finally {
+    setSubmitting(false);
+  }
+};
+
+  if (loading || !isLoaded) {
     return (
       <div className="min-h-screen bg-[#FDFBF7] flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-emerald-600" />
@@ -399,114 +428,107 @@ export default function BlogDetailsPage() {
                         : "bg-white border-gray-100"
                     }`}
                   >
-                    <div className="flex items-start gap-3">
-                      <div className="w-10 h-10 relative rounded-full overflow-hidden shrink-0 bg-gray-200">
-                        <Image
-                          src={comment.avatar || "https://via.placeholder.com/100"}
-                          alt={comment.name}
-                          fill
-                          className="object-cover"
-                        />
-                      </div>
-                      <div className="flex-1">
-                        <div className="flex items-center justify-between gap-2 flex-wrap">
-                          <div className="flex items-center gap-2">
-                            <h4 className="text-xs font-bold text-gray-900">
-                              {comment.name}
-                            </h4>
-                            {comment.isAuthorReply && (
-                              <span className="bg-emerald-100 text-emerald-800 text-[9px] font-bold px-2 py-0.5 rounded">
-                                Author
-                              </span>
-                            )}
-                          </div>
-                          
-                          {/* Rating & Date */}
-                          <div className="flex items-center gap-2 text-[10px] text-gray-400">
-                            {comment.rating && (
-                              <div className="flex items-center text-amber-500 font-bold gap-1">
-                                <Star className="w-3 h-3 fill-amber-400 stroke-amber-400" />
-                                <span>{comment.rating.toFixed(1)}</span>
-                              </div>
-                            )}
-                            <span>
-                              {new Date(comment.date).toLocaleDateString("en-GB", {
-                                day: "2-digit",
-                                month: "short",
-                                year: "numeric",
-                              })}
-                            </span>
-                          </div>
-                        </div>
+                   <div className="relative w-10 h-10 overflow-hidden rounded-full">
+  <Image
+    src={
+      comment.avatar &&
+      !comment.avatar.includes("via.placeholder.com")
+        ? comment.avatar
+        : "/images/default-avatar.png"
+    }
+    alt={comment.name || "User"}
+    fill
+    sizes="40px"
+    className="object-cover"
+  />
+</div>
 
-                        {/* Comment Text */}
-                        <p className="text-xs text-gray-600 mt-2 leading-relaxed">
-                          {comment.comment}
-                        </p>
-                      </div>
-                    </div>
+
+
+
+
+
+
+
+
                   </div>
+
+
+
+
                 ))}
               </div>
 
               {/* Comment Form */}
               <div className="mt-6 border-t border-gray-100 pt-6">
                 <h4 className="text-sm font-bold text-gray-900 mb-4">Leave a Comment</h4>
-                <form onSubmit={handleCommentSubmit} className="space-y-3">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                
+                {isSignedIn ? (
+                  <form onSubmit={handleCommentSubmit} className="space-y-3">
+                    {/* User Info Display */}
+                    <div className="flex items-center gap-3 mb-3 p-3 bg-gray-50 rounded-lg">
+                      <div className="w-10 h-10 relative rounded-full overflow-hidden shrink-0">
+                        <Image
+                          src={user.imageUrl || "https://via.placeholder.com/100"}
+                          alt={user.fullName || "User"}
+                          fill
+                          className="object-cover"
+                        />
+                      </div>
+                      <div>
+                        <p className="text-xs font-bold text-gray-900">
+                          {user.fullName || user.firstName || "User"}
+                        </p>
+                        <p className="text-[10px] text-gray-500">
+                          {user.primaryEmailAddress?.emailAddress || ""}
+                        </p>
+                      </div>
+                    </div>
+
                     <div>
-                      <label className="block text-xs font-medium text-gray-700 mb-1">Name *</label>
-                      <input
-                        type="text"
+                      <label className="block text-xs font-medium text-gray-700 mb-1">Rating</label>
+                      <div className="flex gap-1">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <button
+                            key={star}
+                            type="button"
+                            onClick={() => setCommentRating(star)}
+                            className="text-amber-400 transition-transform hover:scale-110"
+                          >
+                            <Star className={`w-5 h-5 ${star <= commentRating ? "fill-amber-400" : "fill-gray-200"}`} />
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-medium text-gray-700 mb-1">Comment *</label>
+                      <textarea
                         required
-                        value={commentData.name}
-                        onChange={(e) => setCommentData({ ...commentData, name: e.target.value })}
-                        className="w-full px-3.5 py-2 text-xs rounded-lg border border-gray-200 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                        rows={4}
+                        value={commentText}
+                        onChange={(e) => setCommentText(e.target.value)}
+                        placeholder="Write your comment here..."
+                        className="w-full px-3.5 py-2 text-xs rounded-lg border border-gray-200 focus:outline-none focus:ring-1 focus:ring-emerald-500 resize-none"
                       />
                     </div>
-                    <div>
-                      <label className="block text-xs font-medium text-gray-700 mb-1">Email *</label>
-                      <input
-                        type="email"
-                        required
-                        value={commentData.email}
-                        onChange={(e) => setCommentData({ ...commentData, email: e.target.value })}
-                        className="w-full px-3.5 py-2 text-xs rounded-lg border border-gray-200 focus:outline-none focus:ring-1 focus:ring-emerald-500"
-                      />
-                    </div>
+
+                    <button
+                      type="submit"
+                      disabled={submitting}
+                      className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg transition-colors disabled:opacity-70 disabled:cursor-not-allowed flex items-center gap-2"
+                    >
+                      {submitting && <Loader2 className="w-3 h-3 animate-spin" />}
+                      {submitting ? "Posting..." : "Post Comment"}
+                    </button>
+                  </form>
+                ) : (
+                  <div className="bg-gray-50 rounded-lg p-4 text-center border border-gray-200">
+                    <p className="text-xs text-gray-600">
+                      Please <Link href="/sign-in" className="text-emerald-600 font-bold hover:underline">Sign In</Link> to leave a comment
+                    </p>
                   </div>
-                  <div>
-                    <label className="block text-xs font-medium text-gray-700 mb-1">Rating</label>
-                    <div className="flex gap-1">
-                      {[1, 2, 3, 4, 5].map((star) => (
-                        <button
-                          key={star}
-                          type="button"
-                          onClick={() => setCommentData({ ...commentData, rating: star })}
-                          className="text-amber-400"
-                        >
-                          <Star className={`w-4 h-4 ${star <= commentData.rating ? "fill-amber-400" : "fill-gray-200"}`} />
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-gray-700 mb-1">Comment *</label>
-                    <textarea
-                      required
-                      rows={4}
-                      value={commentData.comment}
-                      onChange={(e) => setCommentData({ ...commentData, comment: e.target.value })}
-                      className="w-full px-3.5 py-2 text-xs rounded-lg border border-gray-200 focus:outline-none focus:ring-1 focus:ring-emerald-500 resize-none"
-                    />
-                  </div>
-                  <button
-                    type="submit"
-                    className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg transition-colors"
-                  >
-                    Post Comment
-                  </button>
-                </form>
+                )}
               </div>
             </div>
 

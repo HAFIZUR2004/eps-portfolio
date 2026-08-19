@@ -9,7 +9,7 @@ const nextConfig = {
       },
       {
         protocol: 'https',
-        hostname: 'i.ibb.co.com', // <--- নতুন এই হোস্টনেমটি যোগ করুন
+        hostname: 'i.ibb.co.com',
         pathname: '/**',
       },
       {
@@ -22,10 +22,13 @@ const nextConfig = {
         hostname: 'via.placeholder.com',
         pathname: '/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'img.clerk.com',
+        pathname: '/**',
+      },
     ],
   },
 };
 
 module.exports = nextConfig;
-
-

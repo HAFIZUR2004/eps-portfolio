@@ -5,7 +5,7 @@ import Image from 'next/image';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
 
 export default function FireEvacuationHero() {
-  const [images, setImages] = useState<string[]>([]);
+  const [images, setImages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeIndex, setActiveIndex] = useState(0);
 
@@ -89,14 +89,18 @@ export default function FireEvacuationHero() {
         relative
         w-full
         overflow-hidden
-        bg-[#eee4de]
         px-4
         sm:px-8
         lg:px-12
-        py-10
-        sm:py-14
-        lg:py-16
+        pt-10
+        pb-10
+        sm:pt-14
+        sm:pb-14
+        lg:pt-16
       "
+      style={{
+        background: 'linear-gradient(to bottom, #eee4de 89%, #F8F4F1 78%)',
+      }}
     >
       <div className="mx-auto w-full max-w-[1200px]">
 
@@ -274,7 +278,7 @@ export default function FireEvacuationHero() {
             className="
               absolute
 
-              right-[3%]
+              right-[9%]
               top-0
 
               z-0
@@ -284,14 +288,14 @@ export default function FireEvacuationHero() {
               h-[500px]
               w-[250px]
 
-              border-2
+              border-4
               border-[#006A4E]
 
               lg:block
 
-              xl:right-[8%]
-              xl:h-[350px]
-              xl:w-[270px]
+              xl:-right-[8%]
+              xl:h-[400px]
+              xl:w-[200px]
             "
           />
 
@@ -531,7 +535,7 @@ export default function FireEvacuationHero() {
 
 
         {/* =====================================================
-            BOTTOM WHITE PILL
+            BOTTOM WHITE PILL (STATS COUNTER)
         ====================================================== */}
         <div
           className="
@@ -552,11 +556,52 @@ export default function FireEvacuationHero() {
             sm:h-[75px]
             sm:w-[70%]
 
-            lg:mt-12
+            lg:mt-8
             lg:w-[72%]
-          "
-        />
 
+            flex
+            items-center
+            justify-around
+            px-4
+            sm:px-8
+          "
+        >
+          {/* Stat 1 */}
+          <div className="flex flex-col items-center justify-center text-center">
+            <span className="text-base font-black text-slate-900 sm:text-xl lg:text-2xl">
+              100+
+            </span>
+            <span className="text-[9px] font-semibold text-slate-700 sm:text-xs">
+              Works Done
+            </span>
+          </div>
+
+          {/* Divider */}
+          <div className="h-6 w-[1px] bg-slate-900/20 sm:h-8" />
+
+          {/* Stat 2 */}
+          <div className="flex flex-col items-center justify-center text-center">
+            <span className="text-base font-black text-slate-900 sm:text-xl lg:text-2xl">
+              150+
+            </span>
+            <span className="text-[9px] font-semibold text-slate-700 sm:text-xs">
+              Happy Clients
+            </span>
+          </div>
+
+          {/* Divider */}
+          <div className="h-6 w-[1px] bg-slate-900/20 sm:h-8" />
+
+          {/* Stat 3 */}
+          <div className="flex flex-col items-center justify-center text-center">
+            <span className="text-base font-black text-slate-900 sm:text-xl lg:text-2xl">
+              20+
+            </span>
+            <span className="text-[9px] font-semibold text-slate-700 sm:text-xs">
+              Countries
+            </span>
+          </div>
+        </div>
       </div>
     </section>
   );

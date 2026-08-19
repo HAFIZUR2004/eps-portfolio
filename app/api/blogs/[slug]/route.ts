@@ -1,107 +1,147 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
 import Post from "@/models/Post";
+import { currentUser } from "@clerk/nextjs/server";
 
 // GET Single Blog
 export async function GET(
-  req: Request, 
+  req: Request,
   { params }: { params: Promise<{ slug: string }> }
 ) {
   try {
     await connectDB();
+
     const { slug } = await params;
-    const post = await Post.findOne({ slug }).populate("category", "name slug");
 
-    if (!post) return NextResponse.json({ error: "Post not found" }, { status: 404 });
-
-    return NextResponse.json(post, { status: 200 });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
-  }
-}
-
-// POST: Add Comment to Blog
-export async function POST(
-  req: Request, 
-  { params }: { params: Promise<{ slug: string }> }
-) {
-  try {
-    await connectDB();
-    const { slug } = await params;
-    const commentData = await req.json();
-
-    const post = await Post.findOneAndUpdate(
-      { slug },
-      { $push: { comments: commentData } },
-      { new: true }
+    const post = await Post.findOne({ slug }).populate(
+      "category",
+      "name slug"
     );
 
-    return NextResponse.json(post, { status: 200 });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
-  }
-}
-
-// PUT: Update Blog
-export async function PUT(
-  req: Request, 
-  { params }: { params: Promise<{ slug: string }> }
-) {
-  try {
-    await connectDB();
-    const { slug } = await params;
-    const body = await req.json();
-
-    // Slug আপডেট করার সময় ইউনিক চেক
-    if (body.slug && body.slug !== slug) {
-      const existingPost = await Post.findOne({ slug: body.slug });
-      if (existingPost) {
-        return NextResponse.json(
-          { error: "A blog post with this slug already exists." },
-          { status: 400 }
-        );
-      }
+    if (!post) {
+      return NextResponse.json(
+        { error: "Post not found" },
+        { status: 404 }
+      );
     }
 
-    const post = await Post.findOneAndUpdate(
-      { slug },
-      body,
-      { returnDocument: 'after', runValidators: true }
-    );
-
-    if (!post) return NextResponse.json({ error: "Post not found" }, { status: 404 });
-
     return NextResponse.json(post, { status: 200 });
   } catch (error: any) {
-    console.error("PUT /api/blogs/[slug] Error:", error);
-    
-    if (error.code === 11000) {
+    return NextResponse.json(
+      { error: error.message },
+      { status: 500 }
+    );
+  }
+}
+
+// POST: Add Comment
+export async function POST(
+  req: Request,
+  { params }: { params: Promise<{ slug: string }> }
+) {
+  try {
+    await connectDB();
+
+    // ==========================================
+    // Check Clerk Login
+    // ==========================================
+
+    const user = await currentUser();
+
+    if (!user) {
       return NextResponse.json(
-        { error: "A blog post with this title/slug already exists." },
+        {
+          error: "You must be logged in to comment.",
+        },
+        { status: 401 }
+      );
+    }
+
+    const { slug } = await params;
+
+    const body = await req.json();
+
+    // ==========================================
+    // Validate Comment
+    // ==========================================
+
+    if (!body.comment?.trim()) {
+      return NextResponse.json(
+        {
+          error: "Comment is required.",
+        },
         { status: 400 }
       );
     }
-    
-    return NextResponse.json({ error: error.message || "Failed to update blog" }, { status: 500 });
-  }
-}
 
-// DELETE: Delete Blog
-export async function DELETE(
-  req: Request, 
-  { params }: { params: Promise<{ slug: string }> }
-) {
-  try {
-    await connectDB();
-    const { slug } = await params;
-    
-    const post = await Post.findOneAndDelete({ slug });
+    // ==========================================
+    // Get User Information From Clerk
+    // ==========================================
 
-    if (!post) return NextResponse.json({ error: "Post not found" }, { status: 404 });
+    const name =
+      user.fullName ||
+      user.firstName ||
+      user.username ||
+      "User";
 
-    return NextResponse.json({ message: "Blog deleted successfully" }, { status: 200 });
+    const email =
+      user.primaryEmailAddress?.emailAddress || "";
+
+    const avatar = user.imageUrl || "";
+
+    // ==========================================
+    // Create Comment
+    // ==========================================
+const newComment = {
+  userId: user.id,
+  name,
+  email,
+  avatar: user.imageUrl || "",
+  text: body.comment.trim(),
+  rating: typeof body.rating === "number" ? body.rating : 5,
+  createdAt: new Date(),
+  isAuthorReply: false,
+};
+
+    // ==========================================
+    // Add Comment
+    // ==========================================
+
+    const post = await Post.findOneAndUpdate(
+      { slug },
+      {
+        $push: {
+          comments: newComment,
+        },
+      },
+      {
+        new: true,
+        runValidators: true,
+      }
+    );
+
+    if (!post) {
+      return NextResponse.json(
+        {
+          error: "Post not found.",
+        },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json(post, {
+      status: 200,
+    });
   } catch (error: any) {
-    console.error("DELETE /api/blogs/[slug] Error:", error);
-    return NextResponse.json({ error: error.message || "Failed to delete blog" }, { status: 500 });
+    console.error("Comment Error:", error);
+
+    return NextResponse.json(
+      {
+        error:
+          error.message ||
+          "Failed to add comment.",
+      },
+      { status: 500 }
+    );
   }
 }

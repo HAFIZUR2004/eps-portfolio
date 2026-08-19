@@ -79,6 +79,7 @@ export default function OurTrustedClients() {
             <span className="absolute left-0 top-1 z-10 h-4 w-4 rounded-full bg-[#006A4E]" />
             <span className="absolute right-0 top-0 h-6 w-6 rounded-full bg-[#FF3B1D]" />
           </div>
+          
         </div>
 
         {/* Marquee Container */}

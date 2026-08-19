@@ -59,7 +59,7 @@ export default function RequirementsSection() {
               </div>
 
               {/* Heading */}
-              <h2 className="text-3xl font-bold tracking-tight text-black md:text-4xl">
+              <h2 className="text-[20px] font-bold tracking-tight text-black md:text-4xl">
                 WHAT I NEED FROM YOU
               </h2>
 
