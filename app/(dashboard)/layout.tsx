@@ -15,7 +15,9 @@ import {
   MessageSquareQuote,
   Settings,
   ArrowLeft,
-  LayoutTemplate, // 👈 Hero Section-এর জন্য নতুন আইকন import করা হয়েছে
+  LayoutTemplate,
+  HelpCircle,
+  List, // 👈 Requirements-এর জন্য নতুন আইকন
 } from "lucide-react";
 
 export default function DashboardLayout({
@@ -34,7 +36,7 @@ export default function DashboardLayout({
       exact: true,
     },
     {
-      name: "Hero Section", // 👈 Hero Management এখানে যুক্ত করা হয়েছে
+      name: "Hero Section",
       href: "/dashboard/hero",
       icon: LayoutTemplate,
     },
@@ -52,6 +54,16 @@ export default function DashboardLayout({
       name: "Portfolio",
       href: "/dashboard/portfolio",
       icon: FolderKanban,
+    },
+    {
+      name: "Requirements", // 👈 Requirements যোগ করা হয়েছে
+      href: "/dashboard/requirements",
+      icon: List,
+    },
+    {
+      name: "FAQ Management",
+      href: "/dashboard/faq",
+      icon: HelpCircle,
     },
     {
       name: "Trusted Clients",

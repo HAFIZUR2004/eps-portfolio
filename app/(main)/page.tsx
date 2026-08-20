@@ -6,7 +6,7 @@ import OurTrustedClients from "../components/OurTrustedClients";
 import WhyChooseMe from "../components/WhyChooseMe";
 import Requerment from "../components/Requerment";
 import Reviews from "../components/Reviews";
-import FAQAndTestimonials from "../components/FAQAndTestimonials";
+import FAQAndTestimonials from "../components/FAQ";
 import ContactSection from "../components/ContactSection";
 import FiverrReview from "../components/FiverrReview";
 

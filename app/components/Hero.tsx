@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
-import { ArrowLeft, ArrowRight } from 'lucide-react';
+import { ArrowLeft, ArrowRight, MessageCircle } from 'lucide-react';
 
 export default function FireEvacuationHero() {
   const [images, setImages] = useState([]);
@@ -37,7 +37,20 @@ export default function FireEvacuationHero() {
   }, []);
 
   // =========================================================
-  // SLIDER CONTROLS
+  // AUTOMATIC SLIDER (প্রতি ৩ সেকেন্ডে ইমেজ পরিবর্তন)
+  // =========================================================
+  useEffect(() => {
+    if (images.length === 0) return;
+
+    const interval = setInterval(() => {
+      setActiveIndex((prev) => (prev + 1) % images.length);
+    }, 3000); // ৩ সেকেন্ড
+
+    return () => clearInterval(interval);
+  }, [images.length]);
+
+  // =========================================================
+  // SLIDER CONTROLS (ম্যানুয়াল)
   // =========================================================
   const handleNext = () => {
     if (!images.length) return;
@@ -198,10 +211,10 @@ export default function FireEvacuationHero() {
                 "
               >
                 We create clear, professional, and standards-based Fire
-                Evacuation Plans, Site Plans, Fire Alarm Zone Plans, and
-                Safety Maps for residential, commercial, industrial,
+                Evacuation Plans, Site Plans, <br/> Fire Alarm Zone Plans, and
+                Safety Maps for residential, commercial, industrial, <br/>
                 healthcare, and educational facilities. Fast delivery,
-                unlimited revisions, and worldwide service.
+                unlimited revisions, <br/> and worldwide service.
               </p>
 
               {/* Buttons */}
@@ -229,9 +242,9 @@ export default function FireEvacuationHero() {
                   View Sample Plans
                 </button>
 
-                {/* WhatsApp */}
+                {/* ✅ WhatsApp - Lucide Icon + Click to WhatsApp */}
                 <a
-                  href="https://wa.me/YOUR_NUMBER"
+                  href="https://wa.me/8801234567890" // 👈 আপনার নম্বর দিন
                   target="_blank"
                   rel="noreferrer"
                   className="
@@ -246,23 +259,7 @@ export default function FireEvacuationHero() {
                     sm:text-sm
                   "
                 >
-                  <span
-                    className="
-                      flex
-                      h-6
-                      w-6
-                      items-center
-                      justify-center
-                      rounded-full
-                      bg-[#25D366]
-                      text-[8px]
-                      font-bold
-                      text-white
-                    "
-                  >
-                    WA
-                  </span>
-
+                  <MessageCircle className="h-5 w-5 text-[#25D366]" />
                   WhatsApp
                 </a>
 
@@ -271,7 +268,7 @@ export default function FireEvacuationHero() {
           </div>
 
 
-          {/* ===================================================
+  {/* ===================================================
               GREEN OUTLINE BEHIND IMAGE
           ==================================================== */}
           <div
@@ -301,7 +298,7 @@ export default function FireEvacuationHero() {
 
 
           {/* ===================================================
-              LARGE HERO IMAGE (Slider)
+              LARGE HERO IMAGE (Slider) - রেসপনসিভ করা হয়েছে
           ==================================================== */}
           <div
             className="
@@ -312,8 +309,8 @@ export default function FireEvacuationHero() {
 
               z-20
 
-              h-[350px]
-              w-[75%]
+              h-[340px]
+              w-[78%]
 
               overflow-hidden
 
@@ -324,14 +321,17 @@ export default function FireEvacuationHero() {
 
               shadow-[0_8px_25px_rgba(0,0,0,0.22)]
 
-              sm:h-[410px]
-              sm:w-[70%]
+              sm:h-[400px]
+              sm:w-[72%]
 
-              lg:h-[430px]
-              lg:w-[58%]
+              lg:h-[420px]
+              lg:w-[60%]
 
-              xl:h-[450px]
-              xl:w-[57%]
+              xl:h-[440px]
+              xl:w-[58%]
+
+              2xl:h-[460px]
+              2xl:w-[56%]
             "
           >
             {currentImage ? (

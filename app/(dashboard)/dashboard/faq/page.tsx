@@ -4,53 +4,45 @@ import React, { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import { Trash2, Plus, Loader2, Upload, Pencil, ArrowUp, ArrowDown } from 'lucide-react';
 
-interface Step {
+interface FAQItem {
   _id: string;
-  num: string;
-  title: string;
-  description: string;
-  color: string;
-  textColor: string;
+  id: string;
+  question: string;
+  answer: string;
   order: number;
   isActive: boolean;
 }
 
-interface ImageItem {
+interface FAQImage {
   _id: string;
   imageUrl: string;
   alt: string;
-  position: 'left' | 'right';
-  column: number;
+  position: 'left-top' | 'left-bottom' | 'right-top' | 'right-bottom';
   order: number;
-  height: string;
   isActive: boolean;
 }
 
-export default function ManageRequirementsPage() {
-  const [steps, setSteps] = useState<Step[]>([]);
-  const [images, setImages] = useState<ImageItem[]>([]);
+export default function ManageFAQPage() {
+  const [faqs, setFaqs] = useState<FAQItem[]>([]);
+  const [images, setImages] = useState<FAQImage[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
 
   // Modal state
   const [modalOpen, setModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<any>(null);
-  const [itemType, setItemType] = useState<'step' | 'image'>('step');
+  const [itemType, setItemType] = useState<'faq' | 'image'>('faq');
 
-  // Form state for Step
-  const [stepNum, setStepNum] = useState('');
-  const [stepTitle, setStepTitle] = useState('');
-  const [stepDesc, setStepDesc] = useState('');
-  const [stepColor, setStepColor] = useState('bg-[#f3e8ff]');
-  const [stepTextColor, setStepTextColor] = useState('text-[#9333ea]');
-  const [stepOrder, setStepOrder] = useState(0);
+  // Form state for FAQ
+  const [faqId, setFaqId] = useState('');
+  const [faqQuestion, setFaqQuestion] = useState('');
+  const [faqAnswer, setFaqAnswer] = useState('');
+  const [faqOrder, setFaqOrder] = useState(0);
 
   // Form state for Image
   const [imageUrl, setImageUrl] = useState('');
   const [imageAlt, setImageAlt] = useState('');
-  const [imagePosition, setImagePosition] = useState<'left' | 'right'>('left');
-  const [imageColumn, setImageColumn] = useState(0);
-  const [imageHeight, setImageHeight] = useState('h-[150px]');
+  const [imagePosition, setImagePosition] = useState<'left-top' | 'left-bottom' | 'right-top' | 'right-bottom'>('left-top');
   const [imageOrder, setImageOrder] = useState(0);
   const [uploadType, setUploadType] = useState<'file' | 'url'>('url');
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -59,10 +51,10 @@ export default function ManageRequirementsPage() {
   const fetchData = async () => {
     try {
       setLoading(true);
-      const res = await fetch('/api/requirements?type=all');
+      const res = await fetch('/api/faq?type=all');
       const data = await res.json();
       if (data.success) {
-        setSteps(data.steps || []);
+        setFaqs(data.faqs || []);
         setImages(data.images || []);
       }
     } catch (error) {
@@ -92,23 +84,19 @@ export default function ManageRequirementsPage() {
   };
 
   // Open Modal for Add
-  const openAddModal = (type: 'step' | 'image') => {
+  const openAddModal = (type: 'faq' | 'image') => {
     setItemType(type);
     setEditingItem(null);
     
-    if (type === 'step') {
-      setStepNum('');
-      setStepTitle('');
-      setStepDesc('');
-      setStepColor('bg-[#f3e8ff]');
-      setStepTextColor('text-[#9333ea]');
-      setStepOrder(steps.length);
+    if (type === 'faq') {
+      setFaqId('');
+      setFaqQuestion('');
+      setFaqAnswer('');
+      setFaqOrder(faqs.length);
     } else {
       setImageUrl('');
       setImageAlt('');
-      setImagePosition('left');
-      setImageColumn(0);
-      setImageHeight('h-[150px]');
+      setImagePosition('left-top');
       setImageOrder(images.length);
       setUploadType('url');
       if (fileInputRef.current) fileInputRef.current.value = '';
@@ -118,23 +106,19 @@ export default function ManageRequirementsPage() {
   };
 
   // Open Modal for Edit
-  const openEditModal = (item: any, type: 'step' | 'image') => {
+  const openEditModal = (item: any, type: 'faq' | 'image') => {
     setItemType(type);
     setEditingItem(item);
     
-    if (type === 'step') {
-      setStepNum(item.num);
-      setStepTitle(item.title);
-      setStepDesc(item.description);
-      setStepColor(item.color);
-      setStepTextColor(item.textColor);
-      setStepOrder(item.order);
+    if (type === 'faq') {
+      setFaqId(item.id);
+      setFaqQuestion(item.question);
+      setFaqAnswer(item.answer);
+      setFaqOrder(item.order);
     } else {
       setImageUrl(item.imageUrl);
       setImageAlt(item.alt);
       setImagePosition(item.position);
-      setImageColumn(item.column);
-      setImageHeight(item.height);
       setImageOrder(item.order);
       setUploadType('url');
     }
@@ -151,23 +135,25 @@ export default function ManageRequirementsPage() {
       
       let body: any = { type: itemType };
       
-      if (itemType === 'step') {
-        if (!stepNum || !stepTitle || !stepDesc) {
-          return alert('Please fill all step fields');
+      if (itemType === 'faq') {
+        if (!faqId || !faqQuestion || !faqAnswer) {
+          return alert('Please fill all FAQ fields');
         }
-        body = { ...body, num: stepNum, title: stepTitle, description: stepDesc, color: stepColor, textColor: stepTextColor, order: stepOrder };
+        body.data = { id: faqId, question: faqQuestion, answer: faqAnswer, order: faqOrder };
+        if (editingItem) {
+          body.id = editingItem._id;
+        }
       } else {
         if (!imageUrl) {
           return alert('Please upload an image');
         }
-        body = { ...body, imageUrl: imageUrl, alt: imageAlt, position: imagePosition, column: imageColumn, height: imageHeight, order: imageOrder };
+        body.data = { imageUrl: imageUrl, alt: imageAlt, position: imagePosition, order: imageOrder };
+        if (editingItem) {
+          body.id = editingItem._id;
+        }
       }
 
-      if (editingItem) {
-        body._id = editingItem._id;
-      }
-
-      const url = '/api/requirements';
+      const url = '/api/faq';
       const method = editingItem ? 'PUT' : 'POST';
       
       const res = await fetch(url, {
@@ -182,7 +168,7 @@ export default function ManageRequirementsPage() {
         setModalOpen(false);
         fetchData();
       } else {
-        alert(data.message || 'Failed to save');
+        alert(data.error || 'Failed to save');
       }
     } catch (error) {
       console.error('Submit error:', error);
@@ -193,16 +179,16 @@ export default function ManageRequirementsPage() {
   };
 
   // Delete
-  const handleDelete = async (id: string, type: 'step' | 'image') => {
+  const handleDelete = async (id: string, type: 'faq' | 'image') => {
     if (!confirm(`Are you sure you want to delete this ${type}?`)) return;
     
     try {
-      const res = await fetch(`/api/requirements?id=${id}&type=${type}`, { method: 'DELETE' });
+      const res = await fetch(`/api/faq?type=${type}&id=${id}`, { method: 'DELETE' });
       const data = await res.json();
       if (data.success) {
         fetchData();
       } else {
-        alert(data.message || 'Failed to delete');
+        alert(data.error || 'Failed to delete');
       }
     } catch (error) {
       console.error('Delete error:', error);
@@ -210,8 +196,8 @@ export default function ManageRequirementsPage() {
   };
 
   // Move up/down (reorder)
-  const moveItem = async (id: string, type: 'step' | 'image', direction: 'up' | 'down') => {
-    const items = type === 'step' ? steps : images;
+  const moveItem = async (id: string, type: 'faq' | 'image', direction: 'up' | 'down') => {
+    const items = type === 'faq' ? faqs : images;
     const index = items.findIndex(item => item._id === id);
     if ((direction === 'up' && index === 0) || (direction === 'down' && index === items.length - 1)) return;
     
@@ -219,15 +205,14 @@ export default function ManageRequirementsPage() {
     const newItems = [...items];
     [newItems[index], newItems[newIndex]] = [newItems[newIndex], newItems[index]];
     
-    // Update order numbers
     const updates = newItems.map((item, i) => ({ ...item, order: i }));
     
     try {
       for (const item of updates) {
-        await fetch('/api/requirements', {
+        await fetch('/api/faq', {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ _id: item._id, type, order: item.order }),
+          body: JSON.stringify({ type, id: item._id, data: { order: item.order } }),
         });
       }
       fetchData();
@@ -250,15 +235,15 @@ export default function ManageRequirementsPage() {
     <div className="max-w-7xl mx-auto p-6 space-y-8">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold text-slate-100">Manage Requirements</h1>
-          <p className="text-slate-400 text-sm mt-1">Manage steps and images for the requirements section.</p>
+          <h1 className="text-2xl font-bold text-slate-100">Manage FAQ</h1>
+          <p className="text-slate-400 text-sm mt-1">Manage FAQs and images for the FAQ section.</p>
         </div>
         <div className="flex gap-3">
           <button
-            onClick={() => openAddModal('step')}
+            onClick={() => openAddModal('faq')}
             className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-xl flex items-center gap-2"
           >
-            <Plus size={18} /> Add Step
+            <Plus size={18} /> Add FAQ
           </button>
           <button
             onClick={() => openAddModal('image')}
@@ -269,47 +254,47 @@ export default function ManageRequirementsPage() {
         </div>
       </div>
 
-      {/* Steps Section */}
+      {/* FAQs Section */}
       <div className="bg-slate-900 p-6 rounded-2xl border border-slate-800">
-        <h2 className="text-lg font-semibold text-slate-200 mb-4">Steps ({steps.length})</h2>
+        <h2 className="text-lg font-semibold text-slate-200 mb-4">FAQs ({faqs.length})</h2>
         
         <div className="space-y-3">
-          {steps.map((step, index) => (
+          {faqs.map((faq, index) => (
             <div
-              key={step._id}
+              key={faq._id}
               className="bg-slate-950 border border-slate-800 rounded-xl p-4 flex items-center gap-4 group hover:border-blue-500/30 transition"
             >
-              <div className={`w-14 h-14 rounded-xl flex items-center justify-center text-xl font-black ${step.color} ${step.textColor} shrink-0`}>
-                {step.num}
+              <div className="w-10 h-10 rounded-lg bg-blue-500/10 text-blue-400 flex items-center justify-center font-bold shrink-0">
+                {faq.id}
               </div>
               <div className="flex-1">
-                <h4 className="font-semibold text-slate-200">{step.title}</h4>
-                <p className="text-sm text-slate-400">{step.description}</p>
+                <h4 className="font-semibold text-slate-200">{faq.question}</h4>
+                <p className="text-sm text-slate-400 line-clamp-2">{faq.answer}</p>
               </div>
               
               <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition">
                 <button
-                  onClick={() => moveItem(step._id, 'step', 'up')}
+                  onClick={() => moveItem(faq._id, 'faq', 'up')}
                   className="p-1.5 bg-slate-800 text-slate-400 rounded-lg hover:text-slate-200"
                   disabled={index === 0}
                 >
                   <ArrowUp size={16} />
                 </button>
                 <button
-                  onClick={() => moveItem(step._id, 'step', 'down')}
+                  onClick={() => moveItem(faq._id, 'faq', 'down')}
                   className="p-1.5 bg-slate-800 text-slate-400 rounded-lg hover:text-slate-200"
-                  disabled={index === steps.length - 1}
+                  disabled={index === faqs.length - 1}
                 >
                   <ArrowDown size={16} />
                 </button>
                 <button
-                  onClick={() => openEditModal(step, 'step')}
+                  onClick={() => openEditModal(faq, 'faq')}
                   className="p-1.5 bg-blue-500/10 text-blue-400 rounded-lg hover:bg-blue-500/20 border border-blue-500/20"
                 >
                   <Pencil size={16} />
                 </button>
                 <button
-                  onClick={() => handleDelete(step._id, 'step')}
+                  onClick={() => handleDelete(faq._id, 'faq')}
                   className="p-1.5 bg-rose-500/10 text-rose-400 rounded-lg hover:bg-rose-500/20 border border-rose-500/20"
                 >
                   <Trash2 size={16} />
@@ -330,10 +315,10 @@ export default function ManageRequirementsPage() {
               key={img._id}
               className="relative bg-slate-950 border border-slate-800 rounded-xl p-3 group hover:border-emerald-500/30 transition"
             >
-              <div className={`relative w-full ${img.height} bg-slate-900 rounded-lg overflow-hidden mb-2`}>
+              <div className="relative w-full h-[150px] bg-slate-900 rounded-lg overflow-hidden mb-2">
                 <Image
                   src={img.imageUrl}
-                  alt={img.alt || 'Requirement Image'}
+                  alt={img.alt || 'FAQ Image'}
                   fill
                   className="object-contain"
                 />
@@ -342,7 +327,6 @@ export default function ManageRequirementsPage() {
               <div className="flex justify-between items-center">
                 <div className="text-xs text-slate-400">
                   <p>Position: {img.position}</p>
-                  <p>Column: {img.column}</p>
                 </div>
                 
                 <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition">
@@ -384,68 +368,46 @@ export default function ManageRequirementsPage() {
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl w-full max-w-lg p-6 max-h-[90vh] overflow-y-auto">
             <h2 className="text-xl font-bold text-slate-200 mb-4">
-              {editingItem ? `Edit ${itemType === 'step' ? 'Step' : 'Image'}` : `Add New ${itemType === 'step' ? 'Step' : 'Image'}`}
+              {editingItem ? `Edit ${itemType === 'faq' ? 'FAQ' : 'Image'}` : `Add New ${itemType === 'faq' ? 'FAQ' : 'Image'}`}
             </h2>
 
             <form onSubmit={handleSubmit} className="space-y-4">
               
-              {/* STEP FORM */}
-              {itemType === 'step' && (
+              {/* FAQ FORM */}
+              {itemType === 'faq' && (
                 <>
                   <div>
-                    <label className="block text-sm text-slate-400 mb-1">Step Number</label>
+                    <label className="block text-sm text-slate-400 mb-1">ID</label>
                     <input
                       type="text"
-                      value={stepNum}
-                      onChange={(e) => setStepNum(e.target.value)}
+                      value={faqId}
+                      onChange={(e) => setFaqId(e.target.value)}
                       placeholder="01, 02, etc."
                       className="w-full px-4 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-200"
                       required
                     />
                   </div>
                   <div>
-                    <label className="block text-sm text-slate-400 mb-1">Title</label>
+                    <label className="block text-sm text-slate-400 mb-1">Question</label>
                     <input
                       type="text"
-                      value={stepTitle}
-                      onChange={(e) => setStepTitle(e.target.value)}
-                      placeholder="Floor Plan"
+                      value={faqQuestion}
+                      onChange={(e) => setFaqQuestion(e.target.value)}
+                      placeholder="What is the process?"
                       className="w-full px-4 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-200"
                       required
                     />
                   </div>
                   <div>
-                    <label className="block text-sm text-slate-400 mb-1">Description</label>
+                    <label className="block text-sm text-slate-400 mb-1">Answer</label>
                     <textarea
-                      value={stepDesc}
-                      onChange={(e) => setStepDesc(e.target.value)}
-                      placeholder="Upload your Floor Plan..."
-                      rows={3}
+                      value={faqAnswer}
+                      onChange={(e) => setFaqAnswer(e.target.value)}
+                      placeholder="The process includes..."
+                      rows={4}
                       className="w-full px-4 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 resize-none"
                       required
                     />
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm text-slate-400 mb-1">Background Color</label>
-                      <input
-                        type="text"
-                        value={stepColor}
-                        onChange={(e) => setStepColor(e.target.value)}
-                        placeholder="bg-[#f3e8ff]"
-                        className="w-full px-4 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-200"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm text-slate-400 mb-1">Text Color</label>
-                      <input
-                        type="text"
-                        value={stepTextColor}
-                        onChange={(e) => setStepTextColor(e.target.value)}
-                        placeholder="text-[#9333ea]"
-                        className="w-full px-4 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-200"
-                      />
-                    </div>
                   </div>
                 </>
               )}
@@ -514,50 +476,27 @@ export default function ManageRequirementsPage() {
                       type="text"
                       value={imageAlt}
                       onChange={(e) => setImageAlt(e.target.value)}
-                      placeholder="Floor plan example"
+                      placeholder="FAQ illustration"
                       className="w-full px-4 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-200"
                     />
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm text-slate-400 mb-1">Position</label>
-                      <select
-                        value={imagePosition}
-                        onChange={(e) => setImagePosition(e.target.value as 'left' | 'right')}
-                        className="w-full px-4 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-200"
-                      >
-                        <option value="left">Left</option>
-                        <option value="right">Right</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-sm text-slate-400 mb-1">Column</label>
-                      <select
-                        value={imageColumn}
-                        onChange={(e) => setImageColumn(Number(e.target.value))}
-                        className="w-full px-4 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-200"
-                      >
-                        <option value={0}>Column 0</option>
-                        <option value={1}>Column 1</option>
-                      </select>
-                    </div>
                   </div>
 
                   <div>
-                    <label className="block text-sm text-slate-400 mb-1">Height Class</label>
-                    <input
-                      type="text"
-                      value={imageHeight}
-                      onChange={(e) => setImageHeight(e.target.value)}
-                      placeholder="h-[150px]"
+                    <label className="block text-sm text-slate-400 mb-1">Position</label>
+                    <select
+                      value={imagePosition}
+                      onChange={(e) => setImagePosition(e.target.value as any)}
                       className="w-full px-4 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-200"
-                    />
+                    >
+                      <option value="left-top">Left Top</option>
+                      <option value="left-bottom">Left Bottom</option>
+                      <option value="right-top">Right Top</option>
+                      <option value="right-bottom">Right Bottom</option>
+                    </select>
                   </div>
                 </>
               )}
 
-              {/* Buttons */}
               <div className="flex gap-3 pt-2">
                 <button
                   type="button"

@@ -15,27 +15,34 @@ import {
   MessageSquare,
   Star,
   ChevronLeft,
-  ChevronRight,
-  CornerDownRight,
   Loader2,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { bn } from "date-fns/locale";
 
-// Comment ইন্টারফেস
+// ✅ Fixed: Avatar URL helper
+const getAvatarUrl = (avatar?: string, name?: string) => {
+  if (avatar && !avatar.includes("via.placeholder.com") && avatar !== "") {
+    return avatar;
+  }
+  const displayName = name || "User";
+  return `https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&background=006A4E&color=fff&size=100&bold=true`;
+};
+
+// Comment Interface
 interface Comment {
   _id?: string;
   userId: string;
   name: string;
   email?: string;
-  comment: string;
+  comment: string; // ✅ 'comment'
   rating?: number;
   date: string;
   isAuthorReply?: boolean;
   avatar?: string;
 }
 
-// Blog Post ইন্টারফেস
+// Blog Post Interface
 interface BlogPost {
   _id: string;
   title: string;
@@ -59,7 +66,7 @@ interface BlogPost {
   updatedAt: string;
 }
 
-// Category ইন্টারফেস
+// Category Interface
 interface Category {
   _id: string;
   name: string;
@@ -67,7 +74,7 @@ interface Category {
   count: number;
 }
 
-// Recent Post ইন্টারফেস
+// Recent Post Interface
 interface RecentPost {
   _id: string;
   title: string;
@@ -80,14 +87,14 @@ interface RecentPost {
   createdAt: string;
 }
 
-// সেফ ডেট ফরম্যাট ফাংশন
+// Safe date formatter
+// ✅ English version
 function formatCommentDate(dateString?: string) {
   if (!dateString) return "Just now";
   try {
     const date = new Date(dateString);
-    // চেক করুন ডেটা ভ্যালিড কিনা
     if (isNaN(date.getTime())) return "Just now";
-    return formatDistanceToNow(date, { addSuffix: true, locale: bn });
+    return formatDistanceToNow(date, { addSuffix: true }); // English
   } catch {
     return "Just now";
   }
@@ -114,7 +121,6 @@ export default function BlogDetailsPage() {
       try {
         setLoading(true);
         
-        // Fetch single blog post
         const postRes = await fetch(`/api/blogs/${slug}`);
         if (!postRes.ok) {
           throw new Error("Blog post not found");
@@ -122,7 +128,6 @@ export default function BlogDetailsPage() {
         const postData = await postRes.json();
         setPost(postData);
 
-        // Fetch categories and recent posts
         const blogsRes = await fetch("/api/blogs");
         const blogsData = await blogsRes.json();
         setCategories(blogsData.categories || []);
@@ -139,45 +144,53 @@ export default function BlogDetailsPage() {
   }, [slug]);
 
   // Handle comment submission
-const handleCommentSubmit = async () => {
-  if (!comment.trim()) {
-    return;
-  }
-
-  try {
-    setSubmitting(true);
-
-    const res = await fetch(`/api/blogs/${slug}`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        comment: comment.trim(),
-        rating: rating,
-      }),
-    });
-
-    const data = await res.json();
-
-    if (!res.ok) {
-      throw new Error(data.error || "Failed to submit comment");
+  const handleCommentSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!commentText.trim()) {
+      alert("Please write a comment.");
+      return;
     }
 
-    // Update blog post with new comment
-    setPost(data);
+    if (!isSignedIn) {
+      alert("Please sign in to comment.");
+      return;
+    }
 
-    // Clear form
-    setComment("");
-    setRating(5);
+    setSubmitting(true);
+    setError(null);
 
-    console.log("Comment submitted successfully");
-  } catch (error) {
-    console.error("Comment submit error:", error);
-  } finally {
-    setSubmitting(false);
-  }
-};
+    try {
+      const res = await fetch(`/api/blogs/${slug}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          comment: commentText.trim(),
+          rating: commentRating,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to submit comment");
+      }
+
+      setPost(data);
+      setCommentText("");
+      setCommentRating(5);
+      
+      console.log("✅ Comment submitted successfully");
+
+    } catch (error: any) {
+      console.error("❌ Comment submit error:", error);
+      setError(error.message);
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   if (loading || !isLoaded) {
     return (
@@ -213,9 +226,8 @@ const handleCommentSubmit = async () => {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           
-          {/* ================= LEFT SIDEBAR ================= */}
+          {/* LEFT SIDEBAR */}
           <aside className="lg:col-span-4 space-y-6">
-            
             {/* Search Box */}
             <div className="bg-white p-5 rounded-2xl border border-gray-200/80 shadow-sm">
               <div className="flex items-center gap-2 mb-3 text-gray-900 font-bold text-sm">
@@ -286,7 +298,7 @@ const handleCommentSubmit = async () => {
               </div>
             </div>
 
-            {/* Popular Tags */}
+            {/* Tags */}
             <div className="bg-white p-5 rounded-2xl border border-gray-200/80 shadow-sm">
               <div className="flex items-center gap-2 mb-4 text-gray-900 font-bold text-sm">
                 <Tag className="w-4 h-4 text-emerald-600" />
@@ -303,17 +315,13 @@ const handleCommentSubmit = async () => {
                 ))}
               </div>
             </div>
-
           </aside>
 
-
-          {/* ================= RIGHT BLOG CONTENT ================= */}
+          {/* RIGHT BLOG CONTENT */}
           <section className="lg:col-span-8 space-y-8">
             
             {/* Article Main Card */}
             <div className="bg-white rounded-2xl border border-gray-200/80 p-6 md:p-8 shadow-sm">
-              
-              {/* Featured Cover Image */}
               <div className="w-full h-64 md:h-96 relative rounded-xl overflow-hidden mb-6 bg-gray-100">
                 <Image
                   src={post.image || "https://via.placeholder.com/800x400"}
@@ -323,7 +331,6 @@ const handleCommentSubmit = async () => {
                 />
               </div>
 
-              {/* Author & Meta Bar */}
               <div className="flex flex-wrap items-center justify-between gap-4 pb-6 mb-6 border-b border-gray-100 text-xs text-gray-500">
                 <div className="flex items-center gap-4 flex-wrap">
                   <div className="flex items-center gap-2">
@@ -347,19 +354,16 @@ const handleCommentSubmit = async () => {
                     <span>{post.comments?.length || 0} comments</span>
                   </div>
                 </div>
-
                 <span className="bg-gray-100 text-gray-600 px-3 py-1 rounded-full text-[11px] font-semibold">
                   {post.category?.name || "General"}
                 </span>
               </div>
 
-              {/* Article Content */}
               <div 
                 className="space-y-4 text-xs md:text-sm text-gray-600 leading-relaxed"
                 dangerouslySetInnerHTML={{ __html: post.content }}
               />
 
-              {/* Article Tags */}
               <div className="mt-8 pt-6 border-t border-gray-100 flex flex-wrap items-center gap-2">
                 {post.tags?.map((tag, idx) => (
                   <span
@@ -370,44 +374,7 @@ const handleCommentSubmit = async () => {
                   </span>
                 ))}
               </div>
-
             </div>
-
-
-            {/* Author Profile Card */}
-            {post.author && (
-              <div className="bg-[#FAF7F2] p-6 rounded-2xl border border-orange-100/60 flex items-center gap-5">
-                <div className="w-16 h-16 relative rounded-full overflow-hidden shrink-0 border-2 border-white shadow-sm">
-                  <Image
-                    src={post.author.avatar || "https://via.placeholder.com/100"}
-                    alt={post.author.name || "Author"}
-                    fill
-                    className="object-cover"
-                  />
-                </div>
-                <div>
-                  <h3 className="text-sm font-bold text-gray-900 mb-1">
-                    Author: <span className="text-gray-800">{post.author.name || "Admin"}</span>
-                  </h3>
-                  <p className="text-xs text-gray-500 leading-relaxed">
-                    {post.author.bio || "Author bio not available."}
-                  </p>
-                </div>
-              </div>
-            )}
-
-
-            {/* Post Navigation Links */}
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 py-4 text-xs font-semibold text-gray-600 border-y border-gray-200/80">
-              <Link href="/blog" className="flex items-center gap-2 hover:text-emerald-700 transition-colors">
-                <ChevronLeft className="w-4 h-4" />
-                <div className="text-left">
-                  <span className="text-[10px] text-gray-400 block font-normal">Back to Blog</span>
-                  <span>View All Articles</span>
-                </div>
-              </Link>
-            </div>
-
 
             {/* Comments Section */}
             <div className="bg-white p-6 md:p-8 rounded-2xl border border-gray-200/80 shadow-sm space-y-6">
@@ -417,46 +384,79 @@ const handleCommentSubmit = async () => {
                 </h3>
               </div>
 
-              {/* Comments List */}
+              {/* Comments List - ✅ Fixed with proper avatar */}
               <div className="space-y-4">
-                {post.comments?.map((comment: Comment, idx: number) => (
-                  <div
-                    key={comment._id || idx}
-                    className={`p-4 rounded-xl border ${
-                      comment.isAuthorReply
-                        ? "bg-gray-50/80 border-gray-100 ml-6 md:ml-10"
-                        : "bg-white border-gray-100"
-                    }`}
-                  >
-                   <div className="relative w-10 h-10 overflow-hidden rounded-full">
-  <Image
-    src={
-      comment.avatar &&
-      !comment.avatar.includes("via.placeholder.com")
-        ? comment.avatar
-        : "/images/default-avatar.png"
-    }
-    alt={comment.name || "User"}
-    fill
-    sizes="40px"
-    className="object-cover"
-  />
-</div>
-
-
-
-
-
-
-
-
-
-                  </div>
-
-
-
-
-                ))}
+                {post.comments?.map((comment: Comment, idx: number) => {
+                  const avatarUrl = getAvatarUrl(comment.avatar, comment.name);
+                  
+                  return (
+                    <div
+                      key={comment._id || idx}
+                      className={`p-4 rounded-xl border ${
+                        comment.isAuthorReply
+                          ? "bg-gray-50/80 border-gray-100 ml-6 md:ml-10"
+                          : "bg-white border-gray-100"
+                      }`}
+                    >
+                      <div className="flex items-start gap-3">
+                        {/* Avatar - ✅ Fixed no 404 error */}
+                        <div className="relative w-10 h-10 rounded-full overflow-hidden shrink-0 bg-emerald-600 flex items-center justify-center text-white font-bold text-sm">
+                          {comment.avatar && !comment.avatar.includes("placeholder") ? (
+                            <Image
+                              src={avatarUrl}
+                              alt={comment.name || "User"}
+                              fill
+                              sizes="40px"
+                              className="object-cover"
+                              onError={(e) => {
+                                // Fallback if image fails to load
+                                const target = e.target as HTMLImageElement;
+                                target.style.display = 'none';
+                              }}
+                            />
+                          ) : (
+                            <span>{comment.name?.charAt(0).toUpperCase() || "U"}</span>
+                          )}
+                        </div>
+                        
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="text-xs font-bold text-gray-900">
+                              {comment.name || "Anonymous"}
+                            </span>
+                            {comment.isAuthorReply && (
+                              <span className="text-[10px] bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full font-medium">
+                                Author
+                              </span>
+                            )}
+                            <span className="text-[10px] text-gray-400">
+                              {formatCommentDate(comment.date)}
+                            </span>
+                          </div>
+                          
+                          {comment.rating && (
+                            <div className="flex gap-0.5 my-1">
+                              {[...Array(5)].map((_, i) => (
+                                <Star
+                                  key={i}
+                                  className={`w-3 h-3 ${
+                                    i < (comment.rating || 0)
+                                      ? "fill-amber-400 text-amber-400"
+                                      : "text-gray-300"
+                                  }`}
+                                />
+                              ))}
+                            </div>
+                          )}
+                          
+                          <p className="text-xs text-gray-600 leading-relaxed mt-1">
+                            {comment.comment}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
 
               {/* Comment Form */}
@@ -465,15 +465,23 @@ const handleCommentSubmit = async () => {
                 
                 {isSignedIn ? (
                   <form onSubmit={handleCommentSubmit} className="space-y-3">
-                    {/* User Info Display */}
+                    {/* User Info */}
                     <div className="flex items-center gap-3 mb-3 p-3 bg-gray-50 rounded-lg">
-                      <div className="w-10 h-10 relative rounded-full overflow-hidden shrink-0">
-                        <Image
-                          src={user.imageUrl || "https://via.placeholder.com/100"}
-                          alt={user.fullName || "User"}
-                          fill
-                          className="object-cover"
-                        />
+                      <div className="relative w-10 h-10 rounded-full overflow-hidden shrink-0 bg-emerald-600 flex items-center justify-center text-white font-bold text-sm">
+                        {user.imageUrl ? (
+                          <Image
+                            src={user.imageUrl}
+                            alt={user.fullName || "User"}
+                            fill
+                            className="object-cover"
+                            onError={(e) => {
+                              const target = e.target as HTMLImageElement;
+                              target.style.display = 'none';
+                            }}
+                          />
+                        ) : (
+                          <span>{user.fullName?.charAt(0).toUpperCase() || "U"}</span>
+                        )}
                       </div>
                       <div>
                         <p className="text-xs font-bold text-gray-900">
