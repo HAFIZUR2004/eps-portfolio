@@ -1,16 +1,20 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
-import { Star, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Star, ChevronLeft, ChevronRight, Search, X } from 'lucide-react';
 import { useUser } from '@clerk/nextjs';
+import { countries, getFlagEmoji } from '@/lib/countries';
+import toast from 'react-hot-toast'; // ✅ Imported react-hot-toast
 
 // Static fallback reviews
 const staticReviews = [
   {
     id: 1,
     name: "SL",
+    position: "CEO",
     country: "United Kingdom",
+    countryCode: "GB",
     initialBg: "bg-amber-600",
     rating: 5,
     createdAt: new Date().toISOString(),
@@ -19,7 +23,9 @@ const staticReviews = [
   {
     id: 2,
     name: "Charles Luciano",
+    position: "Safety Manager",
     country: "Saudi Arabia",
+    countryCode: "SA",
     initialBg: "bg-sky-600",
     rating: 5,
     createdAt: new Date().toISOString(),
@@ -28,7 +34,9 @@ const staticReviews = [
   {
     id: 3,
     name: "Kanokphan Sirithepvattana",
+    position: "Business Owner",
     country: "Philippines",
+    countryCode: "PH",
     initialBg: "bg-emerald-600",
     rating: 5,
     createdAt: new Date().toISOString(),
@@ -37,7 +45,9 @@ const staticReviews = [
   {
     id: 4,
     name: "John Doe",
+    position: "Facility Manager",
     country: "United States",
+    countryCode: "US",
     initialBg: "bg-purple-600",
     rating: 5,
     createdAt: new Date().toISOString(),
@@ -84,18 +94,17 @@ export default function ReviewsSection() {
     setCurrentIndex((prev) => (prev >= reviews.length - 3 ? 0 : prev + 1));
   };
 
-  const handleSubmitReview = async (formData: { rating: number; comment: string; title: string }) => {
-    // Double check user is signed in
+  const handleSubmitReview = async (formData: { rating: number; comment: string; country: string; countryCode: string; position: string }) => {
     if (!isLoaded || !isSignedIn || !user) {
-      alert('Please sign in to submit a review');
+      toast.error('Please sign in to submit a review'); // ✅ Hot Toast
       return;
     }
 
     setIsSubmitting(true);
     setError(null);
+    const loadingToast = toast.loading('Submitting your review...'); // ✅ Loading state
     
     try {
-      // Get user details from Clerk
       const userData = {
         userId: user.id,
         name: user.fullName || user.username || 'Anonymous',
@@ -110,7 +119,9 @@ export default function ReviewsSection() {
         },
         body: JSON.stringify({
           ...userData,
-          title: formData.title,
+          country: formData.country,
+          countryCode: formData.countryCode,
+          position: formData.position,
           rating: formData.rating,
           comment: formData.comment,
         }),
@@ -122,15 +133,18 @@ export default function ReviewsSection() {
         throw new Error(data.error || 'Failed to submit review');
       }
 
-      alert('✅ Thank you! Your review has been submitted and is pending approval.');
+      toast.dismiss(loadingToast);
+      toast.success('Thank you! Your review has been submitted and is pending approval.', {
+        duration: 5000,
+      }); // ✅ Hot Toast Success
       setShowReviewForm(false);
-      // Refresh approved reviews
       await fetchReviews();
       
     } catch (error: any) {
       console.error('Error submitting review:', error);
+      toast.dismiss(loadingToast);
       setError(error.message);
-      alert(`❌ Error: ${error.message}`);
+      toast.error(error.message || 'Error submitting review'); // ✅ Hot Toast Error
     } finally {
       setIsSubmitting(false);
     }
@@ -160,14 +174,20 @@ export default function ReviewsSection() {
         </div>
       )}
 
-      {/* Write Review Button - Only for signed in users */}
+      {/* Write Review Button */}
       {isLoaded && isSignedIn && (
         <div className="mb-6 text-center">
           <button
             onClick={() => setShowReviewForm(!showReviewForm)}
-            className="bg-[#006A4E] text-white px-6 py-2 rounded-full hover:bg-[#005a42] transition-all duration-300 shadow-md hover:shadow-lg"
+            className="group relative inline-flex items-center justify-center px-8 py-3.5 text-sm font-semibold text-white transition-all duration-300 bg-gradient-to-r from-[#006A4E] to-[#008060] rounded-full shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#006A4E]"
           >
-            {showReviewForm ? '✕ Cancel' : '✏️ Write a Review'}
+            <span className="absolute inset-0 rounded-full bg-gradient-to-r from-[#FF3B1D] to-[#006A4E] opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+            <span className="relative flex items-center gap-2.5">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487zm0 0L19.5 7.125" />
+              </svg>
+              {showReviewForm ? 'Cancel Review' : 'Write a Review'}
+            </span>
           </button>
         </div>
       )}
@@ -223,7 +243,7 @@ export default function ReviewsSection() {
                     <div className="flex items-center gap-3">
                       {rev.avatar ? (
                         <div className="w-9 h-9 rounded-full relative overflow-hidden border border-gray-100 shrink-0">
-                          <Image src={rev.avatar} alt={rev.name} fill className="object-cover" />
+                          <Image src={rev.avatar} alt={rev.name} fill sizes="36px" className="object-cover" />
                         </div>
                       ) : (
                         <div className={`w-9 h-9 rounded-full ${rev.initialBg || 'bg-emerald-600'} text-white font-bold text-xs flex items-center justify-center shrink-0 shadow-sm`}>
@@ -232,7 +252,15 @@ export default function ReviewsSection() {
                       )}
                       <div>
                         <h4 className="text-xs font-bold text-gray-900 leading-tight line-clamp-1">{rev.name}</h4>
-                        <span className="text-[10px] text-gray-400 block">{rev.country}</span>
+                        <div className="flex items-center gap-1 flex-wrap">
+                          {rev.position && (
+                            <span className="text-[10px] text-gray-500 font-medium">{rev.position} • </span>
+                          )}
+                          <span className="text-[10px] text-gray-400 flex items-center gap-1">
+                            <span>{getFlagEmoji(rev.countryCode)}</span>
+                            {rev.country}
+                          </span>
+                        </div>
                       </div>
                     </div>
                     <span className="w-6 h-6 rounded-full bg-blue-50 text-blue-600 text-xs font-black flex items-center justify-center shrink-0 border border-blue-100">G</span>
@@ -273,26 +301,58 @@ export default function ReviewsSection() {
 function ReviewForm({ onSubmit, isSubmitting, user, onCancel }: any) {
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState('');
-  const [title, setTitle] = useState('');
+  const [country, setCountry] = useState('');
+  const [countryCode, setCountryCode] = useState('');
+  const [position, setPosition] = useState('');
+  const [searchCountry, setSearchCountry] = useState('');
+  const [showCountryDropdown, setShowCountryDropdown] = useState(false);
   const [hoveredStar, setHoveredStar] = useState(0);
+  const countrySearchRef = useRef<HTMLDivElement>(null);
+
+  // Filter countries safely
+  const filteredCountries = (countries || []).filter(c => 
+    c.name.toLowerCase().includes((searchCountry || '').toLowerCase()) ||
+    c.code.toLowerCase().includes((searchCountry || '').toLowerCase())
+  );
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (countrySearchRef.current && !countrySearchRef.current.contains(event.target as Node)) {
+        setShowCountryDropdown(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const handleCountrySelect = (c: typeof countries[0]) => {
+    setCountry(c.name);
+    setCountryCode(c.code);
+    setSearchCountry('');
+    setShowCountryDropdown(false);
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!title.trim()) {
-      alert('Please enter your title/country.');
+    if (!country) {
+      toast.error('Please select your country.'); // ✅ Hot Toast
+      return;
+    }
+    if (!position.trim()) {
+      toast.error('Please enter your position/designation.'); // ✅ Hot Toast
       return;
     }
     if (!comment.trim()) {
-      alert('Please write your review comment.');
+      toast.error('Please write your review comment.'); // ✅ Hot Toast
       return;
     }
     if (comment.trim().length < 10) {
-      alert('Please write at least 10 characters.');
+      toast.error('Please write at least 10 characters.'); // ✅ Hot Toast
       return;
     }
     
-    onSubmit({ rating, comment, title });
+    onSubmit({ rating, comment, country, countryCode, position });
   };
 
   return (
@@ -317,15 +377,75 @@ function ReviewForm({ onSubmit, isSubmitting, user, onCancel }: any) {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Your Title / Country</label>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Your Position / Designation *</label>
           <input
             type="text"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
+            value={position}
+            onChange={(e) => setPosition(e.target.value)}
             required
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#006A4E] focus:border-transparent transition"
-            placeholder="e.g., CEO at Tech / United Kingdom"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#006A4E] focus:border-transparent transition text-black"
+            placeholder="e.g., CEO, Safety Manager, Business Owner"
           />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Your Country *</label>
+          <div className="relative" ref={countrySearchRef}>
+            <div className="flex items-center gap-2">
+              {countryCode && (
+                <span className="text-2xl">{getFlagEmoji(countryCode)}</span>
+              )}
+              <input
+                type="text"
+                value={searchCountry || country}
+                onChange={(e) => {
+                  setSearchCountry(e.target.value);
+                  setShowCountryDropdown(true);
+                  if (e.target.value === '') {
+                    setCountry('');
+                    setCountryCode('');
+                  }
+                }}
+                onFocus={() => setShowCountryDropdown(true)}
+                placeholder="Search your country..."
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#006A4E] focus:border-transparent transition text-black"
+              />
+              {country && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setCountry('');
+                    setCountryCode('');
+                    setSearchCountry('');
+                  }}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <X size={16} />
+                </button>
+              )}
+            </div>
+
+            {showCountryDropdown && (
+              <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                {filteredCountries.length > 0 ? (
+                  filteredCountries.map((c) => (
+                    <button
+                      key={c.code}
+                      type="button"
+                      onClick={() => handleCountrySelect(c)}
+                      className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-emerald-50 transition-colors text-left"
+                    >
+                      <span className="text-xl">{c.flag}</span>
+                      <span className="text-gray-900">{c.name}</span>
+                      <span className="text-xs text-gray-400 ml-auto">{c.code}</span>
+                    </button>
+                  ))
+                ) : (
+                  <div className="px-4 py-3 text-sm text-gray-500">No country found</div>
+                )}
+              </div>
+            )}
+          </div>
         </div>
 
         <div>
@@ -344,13 +464,6 @@ function ReviewForm({ onSubmit, isSubmitting, user, onCancel }: any) {
               </button>
             ))}
           </div>
-          <p className="text-xs text-gray-500 mt-1">
-            {rating === 1 && '⭐ Poor'}
-            {rating === 2 && '⭐⭐ Fair'}
-            {rating === 3 && '⭐⭐⭐ Good'}
-            {rating === 4 && '⭐⭐⭐⭐ Very Good'}
-            {rating === 5 && '⭐⭐⭐⭐⭐ Excellent!'}
-          </p>
         </div>
 
         <div>
@@ -360,10 +473,9 @@ function ReviewForm({ onSubmit, isSubmitting, user, onCancel }: any) {
             onChange={(e) => setComment(e.target.value)}
             required
             rows={4}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#006A4E] focus:border-transparent transition"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#006A4E] focus:border-transparent transition text-black"
             placeholder="Share your experience with our service..."
           />
-          <p className="text-xs text-gray-400 mt-1">{comment.length}/500 characters</p>
         </div>
 
         <button

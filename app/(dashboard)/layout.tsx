@@ -17,7 +17,8 @@ import {
   ArrowLeft,
   LayoutTemplate,
   HelpCircle,
-  List, // 👈 Requirements-এর জন্য নতুন আইকন
+  List,
+  BarChart3,
 } from "lucide-react";
 
 export default function DashboardLayout({
@@ -41,6 +42,11 @@ export default function DashboardLayout({
       icon: LayoutTemplate,
     },
     {
+      name: "Stats Management",
+      href: "/dashboard/stats",
+      icon: BarChart3,
+    },
+    {
       name: "Services",
       href: "/dashboard/services",
       icon: Briefcase,
@@ -56,7 +62,7 @@ export default function DashboardLayout({
       icon: FolderKanban,
     },
     {
-      name: "Requirements", // 👈 Requirements যোগ করা হয়েছে
+      name: "Requirements",
       href: "/dashboard/requirements",
       icon: List,
     },
@@ -159,7 +165,8 @@ export default function DashboardLayout({
             <span className="text-xs px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-medium">
               Admin Active
             </span>
-            <UserButton afterSignOutUrl="/" />
+            {/* 👈 Fixed: Removed deprecated afterSignOutUrl prop */}
+            <UserButton />
           </div>
         </header>
 

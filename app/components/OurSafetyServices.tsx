@@ -253,7 +253,7 @@ export default function OurSafetyServices() {
                     <h3
                       className="
                         min-h-[50px]
-                        text-[23px]
+                        text-[12px]
                         font-extrabold
                         leading-[1.35]
                         tracking-[-0.4px]

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { Star, CheckCircle, XCircle, Clock, Trash2 } from 'lucide-react';
+import { getFlagEmoji } from '@/lib/countries';
 
 interface Review {
   _id: string;
@@ -10,6 +11,8 @@ interface Review {
   email: string;
   avatar?: string;
   title: string;
+  country: string;
+  countryCode: string;
   rating: number;
   comment: string;
   isApproved: boolean;
@@ -40,16 +43,13 @@ export default function AdminReviewsPage() {
       
       const data = await res.json();
       
-      // Ensure data is an array
       if (Array.isArray(data)) {
         setReviews(data);
       } else {
-        console.error('API did not return an array:', data);
         setReviews([]);
         setError('Invalid data format received');
       }
     } catch (error: any) {
-      console.error('Error fetching reviews:', error);
       setError(error.message || 'Failed to fetch reviews');
       setReviews([]);
     } finally {
@@ -69,8 +69,7 @@ export default function AdminReviewsPage() {
       if (res.ok) {
         await fetchReviews();
       } else {
-        const error = await res.json();
-        alert(error.error || 'Failed to approve review');
+        alert('Failed to approve review');
       }
     } catch (error) {
       alert('Failed to approve review');
@@ -89,8 +88,7 @@ export default function AdminReviewsPage() {
       if (res.ok) {
         await fetchReviews();
       } else {
-        const error = await res.json();
-        alert(error.error || 'Failed to reject review');
+        alert('Failed to reject review');
       }
     } catch (error) {
       alert('Failed to reject review');
@@ -107,38 +105,22 @@ export default function AdminReviewsPage() {
       if (res.ok) {
         await fetchReviews();
       } else {
-        const error = await res.json();
-        alert(error.error || 'Failed to delete review');
+        alert('Failed to delete review');
       }
     } catch (error) {
       alert('Failed to delete review');
     }
   };
 
-  // Safely filter reviews with null/undefined check
   const getFilteredReviews = () => {
-    if (!Array.isArray(reviews) || reviews.length === 0) {
-      return [];
-    }
-    
-    if (filter === 'all') {
-      return reviews;
-    }
-    
-    if (filter === 'pending') {
-      return reviews.filter(r => r.isApproved === false);
-    }
-    
-    if (filter === 'approved') {
-      return reviews.filter(r => r.isApproved === true);
-    }
-    
+    if (!Array.isArray(reviews) || reviews.length === 0) return [];
+    if (filter === 'all') return reviews;
+    if (filter === 'pending') return reviews.filter(r => r.isApproved === false);
+    if (filter === 'approved') return reviews.filter(r => r.isApproved === true);
     return reviews;
   };
 
   const filteredReviews = getFilteredReviews();
-  
-  // Count pending and approved reviews safely
   const pendingCount = Array.isArray(reviews) ? reviews.filter(r => !r.isApproved).length : 0;
   const approvedCount = Array.isArray(reviews) ? reviews.filter(r => r.isApproved).length : 0;
 
@@ -165,7 +147,6 @@ export default function AdminReviewsPage() {
         </div>
       </div>
       
-      {/* Error Message */}
       {error && (
         <div className="mb-4 p-3 bg-red-50 text-red-700 rounded-lg text-sm border border-red-200">
           ❌ {error}
@@ -201,7 +182,16 @@ export default function AdminReviewsPage() {
                       </div>
                     )}
                     <div>
-                      <p className="font-bold text-gray-900">{review.name}</p>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <p className="font-bold text-gray-900">{review.name}</p>
+                        {/* ✅ Country Badge with Flag */}
+                        {review.country && (
+                          <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full flex items-center gap-1">
+                            <span>{getFlagEmoji(review.countryCode)}</span>
+                            {review.country}
+                          </span>
+                        )}
+                      </div>
                       <p className="text-sm text-gray-500">{review.email}</p>
                       <p className="text-xs text-gray-400">{review.title}</p>
                     </div>

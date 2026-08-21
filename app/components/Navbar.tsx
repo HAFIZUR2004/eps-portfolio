@@ -95,7 +95,8 @@ export default function Navbar() {
           {!isLoaded ? (
             <div className="w-20 h-8 bg-gray-200/60 animate-pulse rounded-md"></div>
           ) : isSignedIn ? (
-            <UserButton afterSignOutUrl="/" />
+
+      <UserButton />
           ) : (
             <>
               <Link
@@ -165,7 +166,7 @@ export default function Navbar() {
           {isLoaded && (
             isSignedIn ? (
               <div className="pt-2">
-                <UserButton afterSignOutUrl="/" />
+                <UserButton />
               </div>
             ) : (
               <div className="flex flex-col w-full gap-2 pt-2 border-t border-gray-100">

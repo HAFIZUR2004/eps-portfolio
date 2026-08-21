@@ -11,6 +11,7 @@ import {
   ShieldCheck,
   ChevronDown,
   Loader2,
+  Search,
 } from "lucide-react";
 
 interface PackageDetail {
@@ -44,7 +45,7 @@ const categories: string[] = [
   "Site Diagrams",
 ];
 
-export default function ServicePage(): JSX.Element {
+export default function ServicePage(): React.ReactNode {
   const [services, setServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [fetchError, setFetchError] = useState<string | null>(null);
@@ -89,21 +90,31 @@ export default function ServicePage(): JSX.Element {
     const titleMatch =
       service.title?.toLowerCase().includes(searchQuery.toLowerCase()) ?? false;
     const descMatch =
-      service.aboutGig?.toLowerCase().includes(searchQuery.toLowerCase()) ?? false;
+      service.aboutGig?.toLowerCase().includes(searchQuery.toLowerCase()) ??
+      false;
 
     return matchesCategory && (searchQuery === "" || titleMatch || descMatch);
   });
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 text-gray-800 font-sans pb-20">
-      {/* CATEGORY DROPDOWN */}
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 text-gray-800 font-sans pb-20">
+      {/* HEADER + FILTERS */}
       <section className="max-w-6xl mx-auto px-4 mt-10">
-        <div className="flex justify-center">
-          <div className="relative inline-block group">
+        <div className="flex flex-col items-center gap-6">
+          <h1 className="text-3xl md:text-4xl font-bold text-gray-900 tracking-tight">
+            Explore Our Safety Services
+          </h1>
+          <p className="text-gray-500 text-sm md:text-base max-w-2xl text-center">
+            Browse through our professional fire safety, evacuation, and
+            emergency planning services tailored to your needs.
+          </p>
+
+          {/* Category Dropdown */}
+          <div className="relative inline-block group w-full max-w-xs">
             <select
               value={selectedCategory}
               onChange={(e) => setSelectedCategory(e.target.value)}
-              className="appearance-none bg-white border border-gray-200 text-gray-800 font-medium text-base pl-6 pr-10 py-3 rounded-2xl shadow-sm hover:shadow-md transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+              className="appearance-none bg-white border border-gray-200 text-gray-800 font-medium text-base pl-6 pr-10 py-3 rounded-2xl shadow-sm hover:shadow-md transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent w-full"
             >
               {categories.map((cat) => (
                 <option key={cat} value={cat}>
@@ -122,12 +133,16 @@ export default function ServicePage(): JSX.Element {
       <section className="max-w-6xl mx-auto px-4 mt-12">
         {loading ? (
           <div className="flex flex-col items-center justify-center py-20 gap-3">
-            <Loader2 className="w-8 h-8 text-emerald-600 animate-spin" />
-            <p className="text-gray-500 text-sm font-medium">Loading services...</p>
+            <Loader2 className="w-10 h-10 text-emerald-600 animate-spin" />
+            <p className="text-gray-500 text-sm font-medium">
+              Loading services...
+            </p>
           </div>
         ) : fetchError ? (
-          <div className="text-center py-16 bg-white/70 backdrop-blur-sm rounded-2xl border border-rose-100 shadow-sm">
-            <p className="text-rose-600 font-medium text-base mb-3">{fetchError}</p>
+          <div className="text-center py-16 bg-white/80 backdrop-blur-sm rounded-2xl border border-rose-100 shadow-sm">
+            <p className="text-rose-600 font-medium text-base mb-3">
+              {fetchError}
+            </p>
             <button
               onClick={() => window.location.reload()}
               className="text-xs bg-slate-900 text-white font-semibold px-5 py-2 rounded-xl hover:bg-slate-800 transition"
@@ -157,9 +172,10 @@ export default function ServicePage(): JSX.Element {
                 <Link
                   href={`/services/${service._id}`}
                   key={service._id}
-                  className="bg-white rounded-2xl border border-gray-200/60 overflow-hidden hover:shadow-2xl transition-all duration-300 group hover:-translate-y-1 flex flex-col justify-between"
+                  className="group block h-full"
                 >
-                  <div>
+                  <div className="bg-white rounded-2xl border border-gray-200/60 overflow-hidden hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 flex flex-col h-full">
+                    {/* IMAGE */}
                     <div className="relative h-52 bg-gradient-to-br from-gray-100 to-gray-200 overflow-hidden">
                       {service.popular && (
                         <span className="absolute top-3 left-3 z-10 bg-emerald-600 text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-md flex items-center gap-1">
@@ -186,7 +202,9 @@ export default function ServicePage(): JSX.Element {
                       />
                     </div>
 
-                    <div className="p-6">
+                    {/* CONTENT */}
+                    <div className="p-6 flex-1 flex flex-col">
+                      {/* CATEGORY + RATING */}
                       <div className="flex justify-between items-center mb-3">
                         <span className="text-xs font-semibold text-emerald-700 bg-emerald-50 px-3 py-1 rounded-full">
                           {service.category || "Safety Design"}
@@ -202,32 +220,35 @@ export default function ServicePage(): JSX.Element {
                         </div>
                       </div>
 
-                      <h3 className="font-bold text-xl mb-1 line-clamp-1 group-hover:text-emerald-700 transition-colors">
+                      {/* TITLE */}
+                      <h3 className="font-bold text-xl mb-1 line-clamp-2 group-hover:text-emerald-700 transition-colors">
                         {service.title || "Untitled Service"}
                       </h3>
 
-                      <p className="text-gray-500 text-sm line-clamp-2 mb-5">
+                      {/* DESCRIPTION */}
+                      <p className="text-gray-500 text-sm line-clamp-2 mb-5 flex-1">
                         {service.aboutGig || "No description provided."}
                       </p>
                     </div>
-                  </div>
 
-                  <div className="px-6 pb-6 pt-4 border-t border-gray-100 flex justify-between items-center">
-                    <div>
-                      <p className="font-semibold text-sm text-gray-700">
-                        {service.sellerName || "Service Provider"}
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-bold text-gray-900 text-lg">
-                        {service.basicPackage?.price
-                          ? `$${service.basicPackage.price}`
-                          : "Custom"}
-                      </p>
-                      <p className="text-xs text-gray-400 flex items-center gap-1 justify-end">
-                        <Clock className="w-3 h-3" />{" "}
-                        {service.basicPackage?.delivery || "1-2 Days"}
-                      </p>
+                    {/* FOOTER (SELLER + PRICE) */}
+                    <div className="px-6 pb-6 pt-4 border-t border-gray-100 flex justify-between items-center">
+                      <div>
+                        <p className="font-semibold text-sm text-gray-700">
+                          {service.sellerName || "Service Provider"}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-bold text-gray-900 text-lg">
+                          {service.basicPackage?.price
+                            ? `$${service.basicPackage.price}`
+                            : "Custom"}
+                        </p>
+                        <p className="text-xs text-gray-400 flex items-center gap-1 justify-end">
+                          <Clock className="w-3 h-3" />{" "}
+                          {service.basicPackage?.delivery || "1-2 Days"}
+                        </p>
+                      </div>
                     </div>
                   </div>
                 </Link>
@@ -239,16 +260,22 @@ export default function ServicePage(): JSX.Element {
 
       {/* CUSTOM ORDER BANNER */}
       <section className="max-w-6xl mx-auto px-4 mt-20">
-        <div className="bg-gradient-to-r from-gray-900 to-gray-800 rounded-3xl p-10 md:p-12 text-white text-center md:text-left flex flex-col md:flex-row items-center justify-between gap-8 shadow-2xl">
-          <div>
-            <h3 className="text-3xl font-bold">Need a Custom Evacuation Plan?</h3>
+        <div className="bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 rounded-3xl p-8 md:p-12 text-white text-center md:text-left flex flex-col md:flex-row items-center justify-between gap-6 shadow-2xl relative overflow-hidden">
+          {/* Decorative gradient blob */}
+          <div className="absolute -top-24 -right-24 w-72 h-72 bg-emerald-600/20 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute -bottom-24 -left-24 w-72 h-72 bg-emerald-600/20 rounded-full blur-3xl pointer-events-none" />
+
+          <div className="relative z-10">
+            <h3 className="text-3xl md:text-4xl font-bold">
+              Need a Custom Evacuation Plan?
+            </h3>
             <p className="text-gray-300 text-base mt-2 max-w-lg">
               Send us your floor plan and get a personalized quote within hours.
             </p>
           </div>
           <Link
             href="/contact"
-            className="inline-flex items-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-gray-900 font-bold px-8 py-4 rounded-xl transition-all hover:scale-105 shadow-lg shadow-emerald-500/30"
+            className="relative z-10 inline-flex items-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-gray-900 font-bold px-8 py-4 rounded-xl transition-all hover:scale-105 shadow-lg shadow-emerald-500/30"
           >
             Request Custom Order
             <ArrowRight className="w-5 h-5" />

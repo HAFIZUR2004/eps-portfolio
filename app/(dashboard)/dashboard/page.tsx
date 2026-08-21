@@ -2,12 +2,22 @@ import { auth, currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { Star, Users, MessageSquare, CheckCircle2 } from "lucide-react";
 
+// Clerk Session Claims Interface Define
+interface CustomJwtPayload {
+  metadata?: {
+    role?: string;
+  };
+}
+
 export default async function DashboardOverview() {
   const user = await currentUser();
   const { sessionClaims } = await auth();
 
+  // Type assertion for sessionClaims
+  const customClaims = sessionClaims as unknown as CustomJwtPayload;
+
   // Role Check: Verify if the user is Admin
-  const isAdmin = sessionClaims?.metadata?.role === "admin";
+  const isAdmin = customClaims?.metadata?.role === "admin";
 
   if (!isAdmin) {
     redirect("/"); // Non-admin users are redirected back to home page

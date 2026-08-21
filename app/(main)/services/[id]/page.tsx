@@ -3,12 +3,7 @@
 import React, { useState, useEffect, use } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import {
-  Star,
-  ChevronRight,
-  Check,
-  Loader2,
-} from "lucide-react";
+import { Star, ChevronRight, Check, Loader2 } from "lucide-react";
 
 interface PackageDetail {
   price?: string;
@@ -26,6 +21,7 @@ interface ServiceData {
   reviewsCount?: string | number;
   mainImage?: string;
   images?: string[];
+  recentWorks?: string[]; // ✅ Added recentWorks field
   aboutGig?: string;
   whyWorkWithMe?: string;
   sellerName?: string;
@@ -56,8 +52,8 @@ export default function ServiceDetailPage({
   const [service, setService] = useState<ServiceData | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  
-  // ✅ Other Services (যেগুলো ইমেজ হিসেবে দেখাবে)
+
+  // Other Services (Recent Projects / Recommendations)
   const [otherServices, setOtherServices] = useState<ServiceData[]>([]);
   const [loadingOther, setLoadingOther] = useState<boolean>(true);
 
@@ -98,7 +94,7 @@ export default function ServiceDetailPage({
           setError("Service details not found.");
         }
       } catch (err: unknown) {
-        console.error("Error fetching detail:", err);
+     console.error("Error fetching detail:", err);
         setError("Unable to load service details right now.");
       } finally {
         setLoading(false);
@@ -111,7 +107,7 @@ export default function ServiceDetailPage({
   }, [serviceId]);
 
   // ============================================================
-  // ✅ FETCH OTHER SERVICES (শুধু ইমেজ দেখানোর জন্য)
+  // FETCH OTHER SERVICES
   // ============================================================
 
   useEffect(() => {
@@ -123,7 +119,6 @@ export default function ServiceDetailPage({
         if (!res.ok) throw new Error("Failed to fetch services");
         const data = await res.json();
         if (data?.success && Array.isArray(data.services)) {
-          // বর্তমান সার্ভিস বাদ দিয়ে অন্য ৪টি সার্ভিস নিবে
           const others = data.services
             .filter((s: ServiceData) => s._id !== serviceId)
             .slice(0, 4);
@@ -139,7 +134,7 @@ export default function ServiceDetailPage({
   }, [serviceId]);
 
   // ============================================================
-  // LOADING
+  // LOADING STATE
   // ============================================================
 
   if (loading) {
@@ -152,7 +147,7 @@ export default function ServiceDetailPage({
   }
 
   // ============================================================
-  // ERROR
+  // ERROR STATE
   // ============================================================
 
   if (error || !service) {
@@ -172,16 +167,21 @@ export default function ServiceDetailPage({
   }
 
   // ============================================================
-  // GALLERY
+  // GALLERY IMAGES COMBINATION (Main Image + Gallery Images + Recent Works)
   // ============================================================
 
-  const galleryImages =
-    service.images && service.images.length > 0
-      ? service.images
-      : [service.mainImage || "/placeholder.jpg"];
+  const allGalleryImages = Array.from(
+    new Set(
+      [
+        service.mainImage,
+        ...(Array.isArray(service.images) ? service.images : []),
+        ...(Array.isArray(service.recentWorks) ? service.recentWorks : []), // ✅ Merged recentWorks
+      ].filter(Boolean) as string[]
+    )
+  );
 
   // ============================================================
-  // PACKAGES
+  // PACKAGES INFO
   // ============================================================
 
   const packagesInfo = {
@@ -212,7 +212,7 @@ export default function ServiceDetailPage({
   };
 
   // ============================================================
-  // FAQ
+  // FAQS
   // ============================================================
 
   const faqs =
@@ -237,19 +237,11 @@ export default function ServiceDetailPage({
           },
         ];
 
-  // ============================================================
-  // WHY WORK WITH ME
-  // ============================================================
-
   const whyWorkItems = [
     "Flexibility and Customization",
     "Expertise and Specialization",
     "Direct Communication",
   ];
-
-  // ============================================================
-  // ABOUT ME TEXT
-  // ============================================================
 
   const defaultBio =
     "I am a professional graphic designer & artisan, with over 15 years of experience in fire safety plans and site diagrams.";
@@ -258,15 +250,9 @@ export default function ServiceDetailPage({
   const isBioLong = bioText.length > bioLimit;
   const displayedBio = isBioExpanded || !isBioLong ? bioText : `${bioText.slice(0, bioLimit)}...`;
 
-  // ============================================================
-  // PAGE
-  // ============================================================
-
   return (
     <div className="min-h-screen bg-[#F8F6F2] pb-20 text-gray-800">
-      {/* ========================================================
-          PAGE HEADER
-      ========================================================= */}
+      {/* PAGE HEADER */}
       <div className="border-b border-gray-200/80 bg-[#EFECE6] px-4 py-6 sm:px-8">
         <div className="mx-auto max-w-7xl">
           <p className="mb-2 flex items-center gap-1 text-xs text-gray-500">
@@ -288,15 +274,12 @@ export default function ServiceDetailPage({
         </div>
       </div>
 
-      {/* ========================================================
-          MAIN CONTENT
-      ========================================================= */}
+      {/* MAIN CONTENT */}
       <div className="mx-auto mt-8 grid max-w-7xl grid-cols-1 gap-10 px-4 sm:px-6 lg:grid-cols-3 lg:px-8">
-        {/* ======================================================
-            LEFT CONTENT
-        ======================================================= */}
+        {/* LEFT CONTENT */}
         <div className="space-y-8 lg:col-span-2">
-          {/* MAIN IMAGE */}
+          
+          {/* MAIN IMAGE PREVIEW */}
           <div className="relative h-[320px] w-full overflow-hidden rounded-xl border border-gray-300 bg-gray-200 shadow-sm sm:h-[400px] md:h-[450px]">
             <Image
               src={selectedImage || "/placeholder.jpg"}
@@ -308,21 +291,32 @@ export default function ServiceDetailPage({
             />
           </div>
 
-          {/* GALLERY THUMBNAILS */}
-          {galleryImages.length > 1 && (
-            <div className="flex items-center gap-3 overflow-x-auto pb-1">
-              {galleryImages.map((img, idx) => (
-                <button
-                  key={idx}
-                  type="button"
-                  onClick={() => setSelectedImage(img)}
-                  className={`relative h-14 w-24 flex-shrink-0 overflow-hidden rounded border-2 bg-white transition-all md:h-16 md:w-28 ${
-                    selectedImage === img ? "border-[#096b43]" : "border-gray-300 opacity-70 hover:opacity-100"
-                  }`}
-                >
-                  <Image src={img} alt={`Thumbnail ${idx + 1}`} fill className="object-cover" />
-                </button>
-              ))}
+          {/* GIG GALLERY THUMBNAILS */}
+          {allGalleryImages.length > 1 && (
+            <div className="flex items-center gap-3 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-gray-300">
+              {allGalleryImages.map((img, idx) => {
+                const isActive = selectedImage === img;
+                return (
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={() => setSelectedImage(img)}
+                    className={`relative h-16 w-24 flex-shrink-0 overflow-hidden rounded-lg border-2 transition-all duration-200 md:h-20 md:w-32 ${
+                      isActive
+                        ? "border-[#006A4E] opacity-100 scale-105 shadow-md"
+                        : "border-gray-300 opacity-60 hover:border-gray-400 hover:opacity-100"
+                    }`}
+                  >
+                    <Image
+                      src={img}
+                      alt={`Gallery thumbnail ${idx + 1}`}
+                      fill
+                      className="object-cover"
+                      sizes="128px"
+                    />
+                  </button>
+                );
+              })}
             </div>
           )}
 
@@ -345,7 +339,7 @@ export default function ServiceDetailPage({
             <ul className="space-y-1.5 text-[14px] text-gray-700">
               {whyWorkItems.map((item, index) => (
                 <li key={index} className="flex items-center gap-2.5">
-                  <span className="rounded-full bg-[#096b43] p-0.5 text-white">
+                  <span className="rounded-full bg-[#006A4E] p-0.5 text-white">
                     <Check className="h-3 w-3" />
                   </span>
                   {item}
@@ -363,7 +357,7 @@ export default function ServiceDetailPage({
                   <button
                     type="button"
                     onClick={() => setOpenFaq(openFaq === index ? null : index)}
-                    className="flex w-full items-center justify-between p-3.5 text-left text-[14px] font-medium text-gray-800 transition-colors hover:text-[#096b43]"
+                    className="flex w-full items-center justify-between p-3.5 text-left text-[14px] font-medium text-gray-800 transition-colors hover:text-[#006A4E]"
                   >
                     <span>{faq.question}</span>
                     <span className="text-lg text-gray-400">{openFaq === index ? "−" : "+"}</span>
@@ -378,9 +372,7 @@ export default function ServiceDetailPage({
             </div>
           </div>
 
-          {/* ====================================================
-              ✅ RECENT PROJECTS (শুধু ইমেজ দেখাবে)
-          ===================================================== */}
+          {/* RECENT PROJECTS */}
           <div className="space-y-4 rounded-lg border border-gray-200 bg-white p-6 shadow-sm md:p-8">
             <div className="flex items-center justify-between">
               <h2 className="text-[17px] font-bold text-gray-900">Recent Projects</h2>
@@ -399,7 +391,7 @@ export default function ServiceDetailPage({
                   <Link
                     key={item._id}
                     href={`/services/${item._id}`}
-                    className="group relative aspect-square overflow-hidden rounded-lg border border-gray-200 bg-gray-200 transition hover:border-[#096b43] hover:shadow-md"
+                    className="group relative aspect-square overflow-hidden rounded-lg border border-gray-200 bg-gray-200 transition hover:border-[#006A4E] hover:shadow-md"
                   >
                     <Image
                       src={item.mainImage || "/placeholder.jpg"}
@@ -419,13 +411,11 @@ export default function ServiceDetailPage({
           </div>
         </div>
 
-        {/* ======================================================
-            RIGHT SIDEBAR
-        ======================================================= */}
+        {/* RIGHT SIDEBAR */}
         <div className="space-y-6">
           {/* PACKAGE CARD */}
           <div className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
-            <div className="bg-[#096b43] py-4 text-center text-white">
+            <div className="bg-[#006A4E] py-4 text-center text-white">
               <div className="mb-0.5 text-sm font-light">Price</div>
               <div className="text-3xl font-bold">{packagesInfo[selectedPackage].price}</div>
             </div>
@@ -434,7 +424,7 @@ export default function ServiceDetailPage({
               <select
                 value={quantity}
                 onChange={(e) => setQuantity(e.target.value)}
-                className="w-full rounded border border-gray-300 bg-white p-2 text-sm focus:border-[#096b43] focus:outline-none"
+                className="w-full rounded border border-gray-300 bg-white p-2 text-sm focus:border-[#006A4E] focus:outline-none"
               >
                 <option value="1">1 Evacuation plan</option>
                 <option value="2">2 Evacuation plans</option>
@@ -452,12 +442,12 @@ export default function ServiceDetailPage({
                       value={pkgKey}
                       checked={selectedPackage === pkgKey}
                       onChange={() => setSelectedPackage(pkgKey)}
-                      className="mt-1 h-4 w-4 text-[#096b43] focus:ring-[#096b43]"
+                      className="mt-1 h-4 w-4 text-[#006A4E] focus:ring-[#006A4E]"
                     />
                     <div
                       className={`flex-1 rounded border p-3 transition-all ${
                         selectedPackage === pkgKey
-                          ? "border-[#096b43] bg-[#f9fdfb]"
+                          ? "border-[#006A4E] bg-[#f9fdfb]"
                           : "border-gray-200 group-hover:border-gray-300"
                       }`}
                     >
@@ -472,8 +462,12 @@ export default function ServiceDetailPage({
               </div>
             </div>
             <div className="border-t border-gray-200 bg-[#fafafa] p-5">
-              <p className="mb-1 text-[14px] font-semibold text-gray-900">Brief: {packagesInfo[selectedPackage].title}</p>
-              <p className="mb-3 text-xs leading-relaxed text-gray-500">{packagesInfo[selectedPackage].desc}</p>
+              <p className="mb-1 text-[14px] font-semibold text-gray-900">
+                Brief: {packagesInfo[selectedPackage].title}
+              </p>
+              <p className="mb-3 text-xs leading-relaxed text-gray-500">
+                {packagesInfo[selectedPackage].desc}
+              </p>
               <div className="mb-4 rounded border border-[#f9dcca] bg-[#fdf3e9] p-3 text-xs text-[#9c5c1f]">
                 <span className="mb-0.5 block font-bold">Note:</span>
                 If the floor plan needs to be re-created or designed based on JPEG images, scanned drawings, or project
@@ -481,7 +475,7 @@ export default function ServiceDetailPage({
               </div>
               <button
                 type="button"
-                className="w-full rounded bg-[#096b43] py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-[#075631]"
+                className="w-full rounded bg-[#006A4E] py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-[#075631]"
               >
                 Continue
               </button>

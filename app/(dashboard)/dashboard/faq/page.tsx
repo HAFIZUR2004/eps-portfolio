@@ -22,7 +22,8 @@ interface FAQImage {
   isActive: boolean;
 }
 
-export default function ManageFAQPage() {
+export default function Page() {
+// অথবা শুধু ডিফল্ট এক্সপোর্ট করলেই হবে
   const [faqs, setFaqs] = useState<FAQItem[]>([]);
   const [images, setImages] = useState<FAQImage[]>([]);
   const [loading, setLoading] = useState(true);

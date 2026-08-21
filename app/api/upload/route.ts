@@ -2,14 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { currentUser } from "@clerk/nextjs/server";
 import cloudinary from "@/lib/cloudinary";
 
-// ✅ এই কনফিগারেশন যোগ করুন
-export const config = {
-  api: {
-    bodyParser: {
-      sizeLimit: '10mb',
-    },
-  },
-};
+// ✅ App Router-এ বডি সাইজ লিমিট বা কনফিগারেশন এভাবে দিতে হয়
+export const maxDuration = 60; // Max execution duration in seconds
 
 export async function POST(request: NextRequest) {
   try {
@@ -23,7 +17,7 @@ export async function POST(request: NextRequest) {
 
     const formData = await request.formData();
     const file = formData.get("file") as File;
-    const folder = formData.get("folder") as string || "requirements";
+    const folder = (formData.get("folder") as string) || "requirements";
 
     if (!file) {
       return NextResponse.json(
@@ -33,7 +27,7 @@ export async function POST(request: NextRequest) {
     }
 
     // File validation
-    if (!file.type.startsWith('image/')) {
+    if (!file.type.startsWith("image/")) {
       return NextResponse.json(
         { error: "Only image files are allowed" },
         { status: 400 }
@@ -73,7 +67,7 @@ export async function POST(request: NextRequest) {
         }
       );
 
-      uploadStream.on('error', (error) => {
+      uploadStream.on("error", (error) => {
         console.error("Stream error:", error);
         reject(error);
       });
@@ -89,18 +83,17 @@ export async function POST(request: NextRequest) {
 
   } catch (error: any) {
     console.error("Upload error:", error);
-    
-    // Better error handling
+
     let errorMessage = "Upload failed";
     let statusCode = 500;
 
-    if (error.message?.includes('File too large')) {
+    if (error.message?.includes("File too large")) {
       errorMessage = "File is too large. Maximum size is 5MB.";
       statusCode = 413;
-    } else if (error.message?.includes('Invalid file type')) {
+    } else if (error.message?.includes("Invalid file type")) {
       errorMessage = "Invalid file type. Please upload an image.";
       statusCode = 400;
-    } else if (error.message?.includes('Cloudinary')) {
+    } else if (error.message?.includes("Cloudinary")) {
       errorMessage = "Cloudinary upload failed. Please try again.";
       statusCode = 502;
     }

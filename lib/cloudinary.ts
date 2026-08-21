@@ -1,20 +1,24 @@
 import { v2 as cloudinary } from 'cloudinary';
 
-// Validate Cloudinary config
-if (!process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME) {
+// Cloudinary credentials validation
+const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
+const apiKey = process.env.CLOUDINARY_API_KEY; // 👈 NEXT_PUBLIC তুলে দিন
+const apiSecret = process.env.CLOUDINARY_API_SECRET;
+
+if (!cloudName) {
   throw new Error('Missing NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME');
 }
-if (!process.env.NEXT_PUBLIC_CLOUDINARY_API_KEY) {
-  throw new Error('Missing NEXT_PUBLIC_CLOUDINARY_API_KEY');
+if (!apiKey) {
+  throw new Error('Missing CLOUDINARY_API_KEY');
 }
-if (!process.env.CLOUDINARY_API_SECRET) {
+if (!apiSecret) {
   throw new Error('Missing CLOUDINARY_API_SECRET');
 }
 
 cloudinary.config({
-  cloud_name: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.NEXT_PUBLIC_CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
+  cloud_name: cloudName,
+  api_key: apiKey,
+  api_secret: apiSecret,
   secure: true,
 });
 

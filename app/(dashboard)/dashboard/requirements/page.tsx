@@ -26,6 +26,18 @@ interface ImageItem {
   isActive: boolean;
 }
 
+// 🌈 প্রি-ডিফাইন্ড কালার প্যালেট
+const COLOR_PALETTES = [
+  { bg: 'bg-[#f3e8ff]', text: 'text-[#9333ea]', label: 'Purple' },
+  { bg: 'bg-[#dbeafe]', text: 'text-[#2563eb]', label: 'Blue' },
+  { bg: 'bg-[#ffedd5]', text: 'text-[#ea580c]', label: 'Orange' },
+  { bg: 'bg-[#d1fae5]', text: 'text-[#059669]', label: 'Green' },
+  { bg: 'bg-[#fecaca]', text: 'text-[#dc2626]', label: 'Red' },
+  { bg: 'bg-[#fef9c3]', text: 'text-[#ca8a04]', label: 'Yellow' },
+  { bg: 'bg-[#e0e7ff]', text: 'text-[#4f46e5]', label: 'Indigo' },
+  { bg: 'bg-[#fce7f3]', text: 'text-[#db2777]', label: 'Pink' },
+];
+
 export default function ManageRequirementsPage() {
   const [steps, setSteps] = useState<Step[]>([]);
   const [images, setImages] = useState<ImageItem[]>([]);
@@ -92,6 +104,7 @@ export default function ManageRequirementsPage() {
   };
 
   // Open Modal for Add
+   // Open Modal for Add
   const openAddModal = (type: 'step' | 'image') => {
     setItemType(type);
     setEditingItem(null);
@@ -102,7 +115,9 @@ export default function ManageRequirementsPage() {
       setStepDesc('');
       setStepColor('bg-[#f3e8ff]');
       setStepTextColor('text-[#9333ea]');
+      // 🔴 FIX: অটোমেটিক 01, 02 ফরম্যাটে সেট করতে padStart ব্যবহার করা হয়েছে
       setStepOrder(steps.length);
+      setStepNum(String(steps.length + 1).padStart(2, '0')); 
     } else {
       setImageUrl('');
       setImageAlt('');
@@ -425,26 +440,30 @@ export default function ManageRequirementsPage() {
                       required
                     />
                   </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm text-slate-400 mb-1">Background Color</label>
-                      <input
-                        type="text"
-                        value={stepColor}
-                        onChange={(e) => setStepColor(e.target.value)}
-                        placeholder="bg-[#f3e8ff]"
-                        className="w-full px-4 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-200"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm text-slate-400 mb-1">Text Color</label>
-                      <input
-                        type="text"
-                        value={stepTextColor}
-                        onChange={(e) => setStepTextColor(e.target.value)}
-                        placeholder="text-[#9333ea]"
-                        className="w-full px-4 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-200"
-                      />
+
+                  {/* 🎨 নতুন কালার প্যালেট সিলেক্টর */}
+                  <div>
+                    <label className="block text-sm text-slate-400 mb-2">Choose Color Theme</label>
+                    <div className="grid grid-cols-4 gap-2">
+                      {COLOR_PALETTES.map((palette) => (
+                        <button
+                          key={palette.label}
+                          type="button"
+                          onClick={() => {
+                            setStepColor(palette.bg);
+                            setStepTextColor(palette.text);
+                          }}
+                          className={`h-10 rounded-xl border-2 transition-all flex items-center justify-center ${
+                            stepColor === palette.bg && stepTextColor === palette.text
+                              ? 'border-white ring-2 ring-emerald-400'
+                              : 'border-transparent hover:border-slate-600'
+                          }`}
+                        >
+                          <span className={`text-xs font-bold px-2 py-1 rounded-md ${palette.bg} ${palette.text}`}>
+                            {palette.label}
+                          </span>
+                        </button>
+                      ))}
                     </div>
                   </div>
                 </>

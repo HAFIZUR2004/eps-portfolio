@@ -24,7 +24,7 @@ const ServiceSchema = new Schema(
 
     // ✅ RECENT WORKS (আপনার প্রজেক্টের ইমেজগুলো এখানে সেভ হবে)
     recentWorks: [{ type: String }], 
-
+    relevantImages: [String],
     // Packages (Optional Structure)
     basicPackage: { type: PackageSchema, default: {} },
     standardPackage: { type: PackageSchema, default: {} },

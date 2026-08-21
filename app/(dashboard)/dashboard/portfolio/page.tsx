@@ -18,7 +18,6 @@ export default function PortfolioDashboard() {
   const [loading, setLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Form State
   const [form, setForm] = useState({
     title: "",
     imageUrl: "",
@@ -26,7 +25,6 @@ export default function PortfolioDashboard() {
     orientation: "portrait" as "portrait" | "landscape",
   });
 
-  // 1. Fetch Existing Items
   const fetchItems = async () => {
     try {
       const res = await fetch("/api/portfolio");
@@ -43,7 +41,6 @@ export default function PortfolioDashboard() {
     fetchItems();
   }, []);
 
-  // 2. Upload / Add Item
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.title || !form.imageUrl) {
@@ -66,7 +63,7 @@ export default function PortfolioDashboard() {
           category: "Fire Evacuation Plan",
           orientation: "portrait",
         });
-        fetchItems(); // Refresh List
+        fetchItems();
       } else {
         alert("Failed to add portfolio item.");
       }
@@ -77,7 +74,6 @@ export default function PortfolioDashboard() {
     }
   };
 
-  // 3. Delete Item
   const handleDelete = async (id: string) => {
     if (!confirm("Are you sure you want to delete this item?")) return;
 
@@ -131,24 +127,21 @@ export default function PortfolioDashboard() {
               <CldUploadButton
                 uploadPreset={process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET}
                 options={{
-                  sources: ["local", "url"], // ফাইল ম্যানেজার ও URL সাপোর্ট
+                  sources: ["local", "url"],
                   clientAllowedFormats: ["png", "jpg", "jpeg", "webp"],
-                  format: "webp", // 👈 ফাইল আপলোড হওয়ার সাথে সাথে WebP তে কনভার্ট হবে
-                  transformation: [
-                    { quality: "auto" } // 👈 অটোমেটিক সাইজ ও কোয়ালিটি অপটিমাইজ করবে
-                  ],
                   maxFileSize: 10000000,
                   multiple: false,
                 }}
-                onSuccess={(result: any) => {
-                  if (result?.info?.secure_url) {
-                    setForm((prev) => ({ ...prev, imageUrl: result.info.secure_url }));
+                onSuccess={(result) => {
+                  const info = result?.info as { secure_url?: string };
+                  if (info?.secure_url) {
+                    setForm((prev) => ({ ...prev, imageUrl: info.secure_url! }));
                   }
                 }}
                 className="w-full border-2 border-dashed border-slate-700 hover:border-emerald-500 bg-slate-950 rounded-xl py-2 px-4 flex items-center justify-center gap-2 text-xs text-slate-300 hover:text-white transition-all cursor-pointer"
               >
                 <UploadCloud className="w-4 h-4 text-emerald-400" />
-                <span>{form.imageUrl ? "Change Image" : "Upload Image (Auto-WebP)"}</span>
+                <span>{form.imageUrl ? "Change Image" : "Upload Image"}</span>
               </CldUploadButton>
 
               {form.imageUrl && (
@@ -159,7 +152,7 @@ export default function PortfolioDashboard() {
             </div>
             {form.imageUrl && (
               <p className="text-[10px] text-emerald-400 mt-1 flex items-center gap-1">
-                <CheckCircle2 className="w-3 h-3" /> Converted to WebP & Uploaded!
+                <CheckCircle2 className="w-3 h-3" /> Image Uploaded!
               </p>
             )}
           </div>
@@ -238,7 +231,6 @@ export default function PortfolioDashboard() {
                 key={item._id}
                 className="bg-slate-900/80 rounded-2xl border border-slate-800 overflow-hidden shadow-lg relative group transition hover:border-slate-700"
               >
-                {/* Image Preview */}
                 <div className="relative h-48 w-full bg-slate-950">
                   <Image
                     src={item.imageUrl}
@@ -249,7 +241,6 @@ export default function PortfolioDashboard() {
                   />
                 </div>
 
-                {/* Info & Delete Button */}
                 <div className="p-3.5 flex items-center justify-between bg-slate-900">
                   <div>
                     <h3 className="text-xs font-semibold text-slate-100 truncate max-w-[150px]">

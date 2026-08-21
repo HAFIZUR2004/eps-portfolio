@@ -14,7 +14,8 @@ export default function CreateServicePage() {
     rating: "5.0",
     reviewsCount: "40",
     mainImage: "",
-    galleryImages: [""] as string[],
+    gigGalleryImages: [""] as string[], // ✅ নাম পরিবর্তন করে gigGalleryImages রাখা হলো
+    recentWorks: [""] as string[],
     aboutGig: "",
     whyWorkWithMe: "",
 
@@ -46,7 +47,6 @@ export default function CreateServicePage() {
     ],
   });
 
-  // Upload Preset Name from Environment Variable (fallback added)
   const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || "eps_preset";
 
   // Safe Cloudinary Success Handlers
@@ -57,41 +57,75 @@ export default function CreateServicePage() {
     }
   };
 
-  const handleGalleryImageUpload = (result: CloudinaryUploadWidgetResults, index: number) => {
+  const handleGigGalleryImageUpload = (result: CloudinaryUploadWidgetResults, index: number) => {
     if (result?.info && typeof result.info !== "string" && result.info.secure_url) {
       const url = result.info.secure_url;
       setFormData((prev) => {
-        const updated = [...prev.galleryImages];
+        const updated = [...prev.gigGalleryImages];
         updated[index] = url;
-        return { ...prev, galleryImages: updated };
+        return { ...prev, gigGalleryImages: updated };
       });
     }
   };
 
-  // Handle Gallery Image Addition & Updates
-  const handleAddGalleryImage = () => {
+  const handleRecentWorksUpload = (result: CloudinaryUploadWidgetResults, index: number) => {
+    if (result?.info && typeof result.info !== "string" && result.info.secure_url) {
+      const url = result.info.secure_url;
+      setFormData((prev) => {
+        const updated = [...prev.recentWorks];
+        updated[index] = url;
+        return { ...prev, recentWorks: updated };
+      });
+    }
+  };
+
+  // Handle Gig Gallery Image Addition & Updates
+  const handleAddGigGalleryImage = () => {
     setFormData((prev) => ({
       ...prev,
-      galleryImages: [...prev.galleryImages, ""],
+      gigGalleryImages: [...prev.gigGalleryImages, ""],
     }));
   };
 
-  const handleGalleryImageChange = (index: number, value: string) => {
+  const handleGigGalleryImageChange = (index: number, value: string) => {
     setFormData((prev) => {
-      const updated = [...prev.galleryImages];
+      const updated = [...prev.gigGalleryImages];
       updated[index] = value;
-      return { ...prev, galleryImages: updated };
+      return { ...prev, gigGalleryImages: updated };
     });
   };
 
-  const handleRemoveGalleryImage = (index: number) => {
+  const handleRemoveGigGalleryImage = (index: number) => {
     setFormData((prev) => ({
       ...prev,
-      galleryImages: prev.galleryImages.filter((_, i) => i !== index),
+      gigGalleryImages: prev.gigGalleryImages.filter((_, i) => i !== index),
     }));
   };
 
-  // Handle FAQ Addition
+  // Recent Works Handlers
+  const handleAddRecentWorks = () => {
+    setFormData((prev) => ({
+      ...prev,
+      recentWorks: [...prev.recentWorks, ""],
+    }));
+  };
+
+  const handleRecentWorksChange = (index: number, value: string) => {
+    setFormData((prev) => {
+      const updated = [...prev.recentWorks];
+      updated[index] = value;
+      return { ...prev, recentWorks: updated };
+    });
+  };
+
+  const handleRemoveRecentWorks = (index: number) => {
+    setFormData((prev) => ({
+      ...prev,
+      recentWorks: prev.recentWorks.filter((_, i) => i !== index),
+    }));
+  };
+
+  // FAQ Handlers
   const handleAddFaq = () => {
     setFormData((prev) => ({
       ...prev,
@@ -211,10 +245,10 @@ export default function CreateServicePage() {
             <span>2. Media & Gallery</span>
             <button
               type="button"
-              onClick={handleAddGalleryImage}
+              onClick={handleAddGigGalleryImage}
               className="text-xs text-[#006A4E] hover:underline flex items-center gap-1 font-medium"
             >
-              <Plus className="w-3.5 h-3.5" /> Add Gallery Image Field
+              <Plus className="w-3.5 h-3.5" /> Add Gig Gallery Image Field
             </button>
           </h2>
 
@@ -241,7 +275,6 @@ export default function CreateServicePage() {
               </CldUploadButton>
             </div>
 
-            {/* Main Image Preview */}
             {formData.mainImage && (
               <div className="relative w-32 h-20 rounded-xl overflow-hidden border border-slate-700 group mt-2">
                 <Image
@@ -261,33 +294,33 @@ export default function CreateServicePage() {
             )}
           </div>
 
-          {/* Gallery Images Upload */}
+          {/* Gig Gallery Images Upload */}
           <div className="space-y-3 pt-2 border-t border-slate-800">
             <label className="block text-xs font-medium text-slate-300">
-              Thumbnail / Gallery Images
+              Gig Gallery Images
             </label>
-            {formData.galleryImages.map((img, idx) => (
+            {formData.gigGalleryImages.map((img, idx) => (
               <div key={idx} className="space-y-2">
                 <div className="flex items-center gap-2">
                   <input
                     type="text"
-                    placeholder={`Gallery Image ${idx + 1} URL`}
+                    placeholder={`Gig Gallery Image ${idx + 1} URL`}
                     value={img}
-                    onChange={(e) => handleGalleryImageChange(idx, e.target.value)}
+                    onChange={(e) => handleGigGalleryImageChange(idx, e.target.value)}
                     className="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-4 py-2 text-xs text-slate-100 focus:outline-none focus:border-[#006A4E]"
                   />
                   <CldUploadButton
                     uploadPreset={uploadPreset}
-                    onSuccess={(result) => handleGalleryImageUpload(result, idx)}
+                    onSuccess={(result) => handleGigGalleryImageUpload(result, idx)}
                     className="bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-2 rounded-xl text-xs font-medium transition flex items-center gap-1 cursor-pointer whitespace-nowrap"
                   >
                     <ImagePlus className="w-3.5 h-3.5" /> Upload
                   </CldUploadButton>
 
-                  {formData.galleryImages.length > 1 && (
+                  {formData.gigGalleryImages.length > 1 && (
                     <button
                       type="button"
-                      onClick={() => handleRemoveGalleryImage(idx)}
+                      onClick={() => handleRemoveGigGalleryImage(idx)}
                       className="p-2 text-rose-400 hover:bg-rose-500/10 rounded-lg"
                     >
                       <Trash2 className="w-4 h-4" />
@@ -295,12 +328,69 @@ export default function CreateServicePage() {
                   )}
                 </div>
 
-                {/* Gallery Thumbnail Preview */}
                 {img && (
                   <div className="relative w-24 h-16 rounded-lg overflow-hidden border border-slate-700">
                     <Image
                       src={img}
-                      alt={`Gallery ${idx + 1}`}
+                      alt={`Gig Gallery ${idx + 1}`}
+                      fill
+                      className="object-cover"
+                    />
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+
+          {/* Relevant Image  */}
+          <div className="space-y-3 pt-2 border-t border-slate-800">
+            <div className="flex items-center justify-between">
+              <label className="block text-xs font-medium text-slate-300">
+                Relevant Image
+              </label>
+              <button
+                type="button"
+                onClick={handleAddRecentWorks}
+                className="text-xs text-[#006A4E] hover:underline flex items-center gap-1 font-medium"
+              >
+                <Plus className="w-3.5 h-3.5" /> Add Recent Project Image
+              </button>
+            </div>
+            
+            {formData.recentWorks.map((img, idx) => (
+              <div key={idx} className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    placeholder={`Recent Project Image ${idx + 1} URL`}
+                    value={img}
+                    onChange={(e) => handleRecentWorksChange(idx, e.target.value)}
+                    className="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-4 py-2 text-xs text-slate-100 focus:outline-none focus:border-[#006A4E]"
+                  />
+                  <CldUploadButton
+                    uploadPreset={uploadPreset}
+                    onSuccess={(result) => handleRecentWorksUpload(result, idx)}
+                    className="bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-2 rounded-xl text-xs font-medium transition flex items-center gap-1 cursor-pointer whitespace-nowrap"
+                  >
+                    <ImagePlus className="w-3.5 h-3.5" /> Upload
+                  </CldUploadButton>
+
+                  {formData.recentWorks.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveRecentWorks(idx)}
+                      className="p-2 text-rose-400 hover:bg-rose-500/10 rounded-lg"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  )}
+                </div>
+
+                {img && (
+                  <div className="relative w-24 h-16 rounded-lg overflow-hidden border border-slate-700">
+                    <Image
+                      src={img}
+                      alt={`Recent Project ${idx + 1}`}
                       fill
                       className="object-cover"
                     />

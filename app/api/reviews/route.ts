@@ -3,7 +3,7 @@ import { auth } from '@clerk/nextjs/server';
 import dbConnect from '@/lib/mongodb';
 import Review from '@/models/Review';
 
-// GET - Get approved reviews for landing page
+// GET - Get approved reviews
 export async function GET(request: NextRequest) {
   try {
     await dbConnect();
@@ -22,7 +22,9 @@ export async function GET(request: NextRequest) {
     const formattedReviews = reviews.map((review: any) => ({
       id: review._id,
       name: review.name,
-      country: review.title || 'Unknown',
+      country: review.country || 'Unknown',
+      countryCode: review.countryCode || '',
+      position: review.position || '',  // ✅ নতুন
       rating: review.rating,
       comment: review.comment,
       initialBg: `bg-${['amber','sky','emerald','purple','pink'][Math.floor(Math.random() * 5)]}-600`,
@@ -46,12 +48,8 @@ export async function POST(request: NextRequest) {
   try {
     await dbConnect();
     
-    // Get the session from Clerk
     const session = await auth();
     
-    console.log('Session for POST:', session);
-    
-    // Check if user is authenticated
     if (!session || !session.userId) {
       return NextResponse.json(
         { error: 'You must be logged in to submit a review' },
@@ -62,14 +60,13 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     
     // Validate required fields
-    if (!body.comment || !body.rating || !body.title) {
+    if (!body.comment || !body.rating || !body.country) {
       return NextResponse.json(
-        { error: 'Title, comment, and rating are required' },
+        { error: 'Country, comment, and rating are required' },
         { status: 400 }
       );
     }
 
-    // Validate rating
     if (body.rating < 1 || body.rating > 5) {
       return NextResponse.json(
         { error: 'Rating must be between 1 and 5' },
@@ -77,13 +74,16 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Create new review with pending approval
+    // Create new review
     const review = await Review.create({
       userId: session.userId,
       name: body.name || 'Anonymous',
       email: body.email || 'no-email@provided.com',
       avatar: body.avatar || '',
-      title: body.title,
+      title: body.title || body.position || '',
+      position: body.position || '',     // ✅ নতুন
+      country: body.country,             // ✅ নতুন
+      countryCode: body.countryCode,     // ✅ নতুন
       rating: parseInt(body.rating),
       comment: body.comment,
       isApproved: false,
@@ -95,7 +95,9 @@ export async function POST(request: NextRequest) {
       review: {
         id: review._id,
         name: review.name,
-        title: review.title,
+        country: review.country,
+        countryCode: review.countryCode,
+        position: review.position,
         rating: review.rating,
         comment: review.comment,
         isApproved: review.isApproved,
