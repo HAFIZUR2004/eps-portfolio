@@ -28,6 +28,8 @@ interface Service {
   reviewsCount?: string | number;
   mainImage?: string;
   sellerName?: string;
+  sellerImage?: string;  // ✅ Added
+  sellerTagline?: string; // ✅ Added
   basicPackage?: PackageDetail;
   popular?: boolean;
   new?: boolean;
@@ -176,30 +178,58 @@ export default function ServicePage(): React.ReactNode {
                 >
                   <div className="bg-white rounded-2xl border border-gray-200/60 overflow-hidden hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 flex flex-col h-full">
                     {/* IMAGE */}
-                    <div className="relative h-52 bg-gradient-to-br from-gray-100 to-gray-200 overflow-hidden">
+                    <div className="relative aspect-[16/10] bg-gradient-to-br from-slate-100 via-white to-slate-100 overflow-hidden border-b border-gray-100">
+                      {/* Image */}
+                      <div className="absolute inset-0 flex items-center justify-center p-2">
+                        {service.mainImage ? (
+                          <Image
+                            src={service.mainImage}
+                            alt={service.title || "Service"}
+                            fill
+                            className="
+                              object-contain
+                              p-2
+                              transition-transform
+                              duration-500
+                              ease-out
+                              group-hover:scale-[1.03]
+                            "
+                            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                            priority={false}
+                          />
+                        ) : (
+                          <div className="flex h-full w-full items-center justify-center text-gray-400">
+                            <span className="text-sm font-medium">No image available</span>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Soft overlay */}
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/5 via-transparent to-transparent pointer-events-none" />
+
+                      {/* Popular */}
                       {service.popular && (
-                        <span className="absolute top-3 left-3 z-10 bg-emerald-600 text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-md flex items-center gap-1">
-                          <Sparkles className="w-3 h-3" /> Popular
-                        </span>
-                      )}
-                      {service.new && (
-                        <span className="absolute top-3 left-3 z-10 bg-blue-600 text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-md flex items-center gap-1">
-                          <ShieldCheck className="w-3 h-3" /> New
-                        </span>
-                      )}
-                      {service.trending && (
-                        <span className="absolute top-3 left-3 z-10 bg-orange-500 text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-md flex items-center gap-1">
-                          <ArrowRight className="w-3 h-3" /> Trending
+                        <span className="absolute top-3 left-3 z-10 bg-emerald-600 text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg flex items-center gap-1">
+                          <Sparkles className="w-3 h-3" />
+                          Popular
                         </span>
                       )}
 
-                      <Image
-                        src={service.mainImage || "/placeholder.jpg"}
-                        alt={service.title || "Service"}
-                        fill
-                        className="object-cover group-hover:scale-105 transition-transform duration-500"
-                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                      />
+                      {/* New */}
+                      {service.new && (
+                        <span className="absolute top-3 left-3 z-10 bg-blue-600 text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg flex items-center gap-1">
+                          <ShieldCheck className="w-3 h-3" />
+                          New
+                        </span>
+                      )}
+
+                      {/* Trending */}
+                      {service.trending && (
+                        <span className="absolute top-3 left-3 z-10 bg-orange-500 text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg flex items-center gap-1">
+                          <ArrowRight className="w-3 h-3" />
+                          Trending
+                        </span>
+                      )}
                     </div>
 
                     {/* CONTENT */}
@@ -230,24 +260,54 @@ export default function ServicePage(): React.ReactNode {
                         {service.aboutGig || "No description provided."}
                       </p>
                     </div>
+                    <hr className="border-t border-dashed border-gray-300" />
 
                     {/* FOOTER (SELLER + PRICE) */}
-                    <div className="px-6 pb-6 pt-4 border-t border-gray-100 flex justify-between items-center">
-                      <div>
-                        <p className="font-semibold text-sm text-gray-700">
-                          {service.sellerName || "Service Provider"}
-                        </p>
-                      </div>
-                      <div className="text-right">
-                        <p className="font-bold text-gray-900 text-lg">
-                          {service.basicPackage?.price
-                            ? `$${service.basicPackage.price}`
-                            : "Custom"}
-                        </p>
-                        <p className="text-xs text-gray-400 flex items-center gap-1 justify-end">
-                          <Clock className="w-3 h-3" />{" "}
-                          {service.basicPackage?.delivery || "1-2 Days"}
-                        </p>
+                    <div className="px-6 pb-6 pt-4 border-t border-gray-100">
+                      <div className="flex items-center gap-4">
+                        {/* Seller Avatar */}
+                        <div className="flex-shrink-0">
+                          <div className="relative h-10 w-10 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 overflow-hidden ring-2 ring-white shadow-sm">
+                            {service.sellerImage ? (
+                              <Image
+                                src={service.sellerImage}
+                                alt={service.sellerName || "Seller"}
+                                fill
+                                sizes="40px"
+                                className="object-cover"
+                              />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center text-white text-sm font-bold">
+                                {(service.sellerName || "S").charAt(0).toUpperCase()}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Seller Info + Price */}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex justify-between items-start gap-2">
+                            <div className="min-w-0">
+                              <p className="font-bold text-sm text-gray-900 truncate">
+                                {service.sellerName || "Fire Safety Expert"}
+                              </p>
+                              <p className="text-xs text-gray-500 mt-0.5">
+                                {service.sellerTagline || "Code Compliant Designs"}
+                              </p>
+                            </div>
+
+                            <div className="text-right flex-shrink-0">
+                              <p className="font-bold text-gray-900 text-lg leading-tight">
+                                {service.basicPackage?.price
+                                  ? `$${service.basicPackage.price}`
+                                  : "Custom"}
+                              </p>
+                              <p className="text-xs text-gray-400 mt-0.5 whitespace-nowrap">
+                                Delivery in {service.basicPackage?.delivery || "1-2 Days"}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>

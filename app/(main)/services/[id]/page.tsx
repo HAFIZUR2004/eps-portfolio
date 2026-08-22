@@ -3,7 +3,7 @@
 import React, { useState, useEffect, use } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Star, ChevronRight, Check, Loader2 } from "lucide-react";
+import { Star, ChevronRight, Check, Loader2, ZoomIn } from "lucide-react"; // ✅ ZoomIn added
 
 interface PackageDetail {
   price?: string;
@@ -21,7 +21,7 @@ interface ServiceData {
   reviewsCount?: string | number;
   mainImage?: string;
   images?: string[];
-  recentWorks?: string[]; // ✅ Added recentWorks field
+  recentWorks?: string[];
   aboutGig?: string;
   whyWorkWithMe?: string;
   sellerName?: string;
@@ -45,28 +45,19 @@ export default function ServiceDetailPage({
   const resolvedParams = use(params);
   const serviceId = resolvedParams.id;
 
-  // ============================================================
   // STATES
-  // ============================================================
-
   const [service, setService] = useState<ServiceData | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-
-  // Other Services (Recent Projects / Recommendations)
   const [otherServices, setOtherServices] = useState<ServiceData[]>([]);
   const [loadingOther, setLoadingOther] = useState<boolean>(true);
-
   const [selectedImage, setSelectedImage] = useState<string>("");
   const [selectedPackage, setSelectedPackage] = useState<"basic" | "standard" | "premium">("basic");
   const [quantity, setQuantity] = useState<string>("1");
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const [isBioExpanded, setIsBioExpanded] = useState<boolean>(false);
 
-  // ============================================================
   // FETCH SERVICE DETAILS
-  // ============================================================
-
   useEffect(() => {
     const fetchServiceDetail = async () => {
       try {
@@ -94,7 +85,7 @@ export default function ServiceDetailPage({
           setError("Service details not found.");
         }
       } catch (err: unknown) {
-     console.error("Error fetching detail:", err);
+        console.error("Error fetching detail:", err);
         setError("Unable to load service details right now.");
       } finally {
         setLoading(false);
@@ -106,10 +97,7 @@ export default function ServiceDetailPage({
     }
   }, [serviceId]);
 
-  // ============================================================
   // FETCH OTHER SERVICES
-  // ============================================================
-
   useEffect(() => {
     const fetchOtherServices = async () => {
       if (!serviceId) return;
@@ -133,10 +121,7 @@ export default function ServiceDetailPage({
     fetchOtherServices();
   }, [serviceId]);
 
-  // ============================================================
   // LOADING STATE
-  // ============================================================
-
   if (loading) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center gap-3 bg-[#F8F6F2]">
@@ -146,10 +131,7 @@ export default function ServiceDetailPage({
     );
   }
 
-  // ============================================================
   // ERROR STATE
-  // ============================================================
-
   if (error || !service) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center bg-[#F8F6F2] p-4 text-center">
@@ -166,24 +148,18 @@ export default function ServiceDetailPage({
     );
   }
 
-  // ============================================================
-  // GALLERY IMAGES COMBINATION (Main Image + Gallery Images + Recent Works)
-  // ============================================================
-
+  // GALLERY IMAGES COMBINATION
   const allGalleryImages = Array.from(
     new Set(
       [
         service.mainImage,
         ...(Array.isArray(service.images) ? service.images : []),
-        ...(Array.isArray(service.recentWorks) ? service.recentWorks : []), // ✅ Merged recentWorks
+        ...(Array.isArray(service.recentWorks) ? service.recentWorks : []),
       ].filter(Boolean) as string[]
     )
   );
 
-  // ============================================================
   // PACKAGES INFO
-  // ============================================================
-
   const packagesInfo = {
     basic: {
       price: service.basicPackage?.price ? `$${service.basicPackage.price}` : "$10",
@@ -211,10 +187,7 @@ export default function ServiceDetailPage({
     },
   };
 
-  // ============================================================
   // FAQS
-  // ============================================================
-
   const faqs =
     service.faqs && service.faqs.length > 0
       ? service.faqs
@@ -279,16 +252,22 @@ export default function ServiceDetailPage({
         {/* LEFT CONTENT */}
         <div className="space-y-8 lg:col-span-2">
           
-          {/* MAIN IMAGE PREVIEW */}
-          <div className="relative h-[320px] w-full overflow-hidden rounded-xl border border-gray-300 bg-gray-200 shadow-sm sm:h-[400px] md:h-[450px]">
+          {/* MAIN IMAGE PREVIEW - FIXED */}
+          <div className="group relative h-[320px] w-full overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm sm:h-[400px] md:h-[450px] lg:h-[500px]">
             <Image
               src={selectedImage || "/placeholder.jpg"}
               alt={service.title || "Service Preview"}
               fill
               priority
-              className="object-contain md:object-cover"
+              className="object-contain p-4 transition-transform duration-300 group-hover:scale-[1.02]"
               sizes="(max-width: 1200px) 100vw, 66vw"
             />
+            
+            {/* Zoom Badge */}
+            <div className="absolute bottom-4 right-4 flex items-center gap-1.5 rounded-full bg-black/60 px-3 py-1.5 text-xs font-medium text-white backdrop-blur-sm opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+              <ZoomIn className="h-3.5 w-3.5" />
+              Hover to zoom
+            </div>
           </div>
 
           {/* GIG GALLERY THUMBNAILS */}
@@ -373,42 +352,104 @@ export default function ServiceDetailPage({
           </div>
 
           {/* RECENT PROJECTS */}
-          <div className="space-y-4 rounded-lg border border-gray-200 bg-white p-6 shadow-sm md:p-8">
-            <div className="flex items-center justify-between">
-              <h2 className="text-[17px] font-bold text-gray-900">Recent Projects</h2>
-              <Link href="/services" className="text-xs font-semibold text-[#006A4E] hover:underline">
-                View All
-              </Link>
+         {/* RECENT PROJECTS */}
+<div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm md:p-7">
+  {/* Section Header */}
+  <div className="mb-5 flex items-center justify-between">
+    <div>
+      <h2 className="text-[17px] font-bold text-gray-900">
+        Recent Projects
+      </h2>
+      <p className="mt-1 text-xs text-gray-500">
+        Explore some of our latest safety & evacuation projects.
+      </p>
+    </div>
+
+    <Link
+      href="/services"
+      className="group inline-flex items-center gap-1 text-xs font-semibold text-[#006A4E] transition hover:text-[#075631]"
+    >
+      View All
+      <ChevronRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
+    </Link>
+  </div>
+
+  {/* Projects */}
+  {loadingOther ? (
+    <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+      {[1, 2, 3, 4].map((item) => (
+        <div
+          key={item}
+          className="aspect-[1.414/1] animate-pulse rounded-xl bg-gray-100"
+        />
+      ))}
+    </div>
+  ) : otherServices.length > 0 ? (
+    <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+      {otherServices.map((item) => (
+        <Link
+          key={item._id}
+          href={`/services/${item._id}`}
+          className="group block"
+        >
+          <div className="relative overflow-hidden rounded-xl border border-gray-200 bg-gray-50 shadow-sm transition-all duration-300 group-hover:-translate-y-1 group-hover:border-[#006A4E]/40 group-hover:shadow-lg">
+            
+            {/* Image */}
+            <div className="relative aspect-[1.414/1] overflow-hidden bg-gradient-to-br from-gray-100 via-white to-gray-100">
+              <Image
+                src={item.mainImage || "/placeholder.jpg"}
+                alt={item.title || "Project"}
+                fill
+                className="object-contain p-1.5 transition-transform duration-500 ease-out group-hover:scale-[1.04]"
+                sizes="(max-width: 640px) 50vw, 25vw"
+              />
+
+              {/* Soft overlay */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/0 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+
+              {/* View icon */}
+              <div className="absolute right-2.5 top-2.5 flex h-7 w-7 items-center justify-center rounded-full bg-white/90 text-gray-700 opacity-0 shadow-md backdrop-blur-sm transition-all duration-300 group-hover:opacity-100">
+                <ZoomIn className="h-3.5 w-3.5" />
+              </div>
+
+              {/* View Project */}
+              <div className="absolute bottom-2.5 left-2.5 right-2.5 translate-y-2 opacity-0 transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100">
+                <span className="block truncate rounded-lg bg-white/95 px-2.5 py-1.5 text-center text-[10px] font-bold text-gray-900 shadow-sm backdrop-blur-sm">
+                  View Project
+                </span>
+              </div>
             </div>
 
-            {loadingOther ? (
-              <div className="flex items-center justify-center py-8">
-                <Loader2 className="h-6 w-6 animate-spin text-[#006A4E]" />
-              </div>
-            ) : otherServices.length > 0 ? (
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-                {otherServices.map((item) => (
-                  <Link
-                    key={item._id}
-                    href={`/services/${item._id}`}
-                    className="group relative aspect-square overflow-hidden rounded-lg border border-gray-200 bg-gray-200 transition hover:border-[#006A4E] hover:shadow-md"
-                  >
-                    <Image
-                      src={item.mainImage || "/placeholder.jpg"}
-                      alt={item.title || "Project"}
-                      fill
-                      className="object-cover transition-transform duration-300 group-hover:scale-105"
-                      sizes="(max-width: 640px) 50vw, 25vw"
-                    />
-                  </Link>
-                ))}
-              </div>
-            ) : (
-              <div className="rounded-lg border border-dashed border-gray-300 bg-gray-50 px-4 py-8 text-center">
-                <p className="text-sm text-gray-500">No projects available.</p>
-              </div>
-            )}
+            {/* Project Info */}
+            <div className="border-t border-gray-100 bg-white px-3 py-2.5">
+              <p className="truncate text-xs font-semibold text-gray-900 transition-colors group-hover:text-[#006A4E]">
+                {item.title || "Untitled Project"}
+              </p>
+
+              <p className="mt-0.5 truncate text-[10px] text-gray-400">
+                {item.category || "Safety Project"}
+              </p>
+            </div>
           </div>
+        </Link>
+      ))}
+    </div>
+  ) : (
+    <div className="rounded-xl border border-dashed border-gray-300 bg-gray-50 px-4 py-10 text-center">
+      <p className="text-sm font-medium text-gray-500">
+        No projects available.
+      </p>
+      <p className="mt-1 text-xs text-gray-400">
+        Recent projects will appear here.
+      </p>
+    </div>
+  )}
+</div>
+
+
+
+
+
         </div>
 
         {/* RIGHT SIDEBAR */}

@@ -1,554 +1,379 @@
 "use client";
 
-import React, { useState } from "react";
-import { Plus, Trash2, Loader2, PackagePlus, HelpCircle, ImagePlus, X } from "lucide-react";
-import { CldUploadButton, CloudinaryUploadWidgetResults } from "next-cloudinary";
+import React, { useEffect, useState } from "react";
 import Image from "next/image";
+import { Plus, Trash2, Loader2, PackagePlus, HelpCircle, ImagePlus, X, Pencil, Eye, RefreshCw, Star, Package } from "lucide-react";
+import { CldUploadButton, CloudinaryUploadWidgetResults } from "next-cloudinary";
 
-export default function CreateServicePage() {
+/* ========== TYPES ========== */
+interface FAQ { question: string; answer: string; }
+interface PackageData { price?: string; title?: string; desc?: string; delivery?: string; }
+interface Service {
+  _id: string; title: string; rating?: string; reviewsCount?: string;
+  mainImage?: string; galleryImages?: string[]; recentWorks?: string[];
+  aboutGig?: string; whyWorkWithMe?: string;
+  basicPackage?: PackageData; standardPackage?: PackageData; premiumPackage?: PackageData;
+  sellerName?: string; sellerRole?: string; sellerImage?: string; sellerBio?: string;
+  faqs?: FAQ[]; createdAt?: string; updatedAt?: string;
+}
+interface FormData {
+  title: string; rating: string; reviewsCount: string;
+  mainImage: string; gigGalleryImages: string[]; recentWorks: string[];
+  aboutGig: string; whyWorkWithMe: string;
+  packages: { basic: PackageData; standard: PackageData; premium: PackageData };
+  sellerName: string; sellerRole: string; sellerImage: string; sellerBio: string;
+  faqs: FAQ[];
+}
+
+/* ========== CONSTANTS ========== */
+const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || "eps_preset";
+
+/* ========== INITIAL STATE ========== */
+const initialFormData: FormData = {
+  title: "", rating: "5.0", reviewsCount: "40",
+  mainImage: "", gigGalleryImages: [""], recentWorks: [""],
+  aboutGig: "", whyWorkWithMe: "",
+  packages: {
+    basic: { price: "10", title: "Small Building Evacuation Plan", desc: "Single Floor • Up to 1,000 sq. ft.", delivery: "1 Day Delivery" },
+    standard: { price: "25", title: "Medium Building Evacuation Plan", desc: "Up to 2 Floors • Up to 2,500 sq. ft.", delivery: "2 Day Delivery" },
+    premium: { price: "50", title: "Large Complex Evacuation Plan", desc: "Multi-story / Large Factory", delivery: "3 Day Delivery" },
+  },
+  sellerName: "Sabbir Hossain", sellerRole: "Service provider", sellerImage: "", sellerBio: "",
+  faqs: [{ question: "Do you offer assistance after completion?", answer: "Yes, we provide post-delivery assistance." }],
+};
+
+/* ========== REUSABLE COMPONENTS ========== */
+const PackageCard = ({ label, color, data, onChange }: { label: string; color: string; data: PackageData; onChange: (key: string, value: string) => void }) => (
+  <div className="bg-slate-950 border border-slate-800 rounded-xl p-4 space-y-3">
+    <h3 className={`text-sm font-bold ${color}`}>{label}</h3>
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+      <input type="text" placeholder="Price" value={data.price || ""} onChange={(e) => onChange("price", e.target.value)} className="bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs" />
+      <input type="text" placeholder="Title" value={data.title || ""} onChange={(e) => onChange("title", e.target.value)} className="md:col-span-2 bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs" />
+    </div>
+    <textarea placeholder="Description" value={data.desc || ""} onChange={(e) => onChange("desc", e.target.value)} className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs min-h-20" />
+    <input type="text" placeholder="Delivery" value={data.delivery || ""} onChange={(e) => onChange("delivery", e.target.value)} className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs" />
+  </div>
+);
+
+const ImageInput = ({ label, value, onValueChange, onUpload, onRemove }: { 
+  label: string; 
+  value: string; 
+  onValueChange: (v: string) => void; 
+  onUpload: (r: CloudinaryUploadWidgetResults) => void; 
+  onRemove?: () => void;
+}) => (
+  <div>
+    <label className="block text-xs text-slate-300 mb-2">{label}</label>
+    <div className="flex flex-col md:flex-row gap-3">
+      <input type="text" value={value} onChange={(e) => onValueChange(e.target.value)} placeholder="Image URL..." className="flex-1 bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-xs outline-none focus:border-emerald-500" />
+      <CldUploadButton uploadPreset={uploadPreset} onSuccess={onUpload} className="bg-emerald-600 hover:bg-emerald-700 px-4 py-3 rounded-xl text-xs flex items-center justify-center gap-2">
+        <ImagePlus className="w-4 h-4" /> Upload
+      </CldUploadButton>
+    </div>
+    {value && (
+      <div className="relative w-40 h-24 mt-3 rounded-xl overflow-hidden border border-slate-700">
+        <Image src={value} alt={label} fill className="object-cover" sizes="160px" />
+        {onRemove && <button type="button" onClick={onRemove} className="absolute top-2 right-2 bg-red-600 hover:bg-red-700 p-1.5 rounded-full"><X className="w-3 h-3" /></button>}
+      </div>
+    )}
+  </div>
+);
+
+/* ========== MAIN COMPONENT ========== */
+export default function ServiceManagementPage() {
+  const [formData, setFormData] = useState<FormData>(initialFormData);
+  const [services, setServices] = useState<Service[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
-  // Form State
-  const [formData, setFormData] = useState({
-    title: "",
-    rating: "5.0",
-    reviewsCount: "40",
-    mainImage: "",
-    gigGalleryImages: [""] as string[], // ✅ নাম পরিবর্তন করে gigGalleryImages রাখা হলো
-    recentWorks: [""] as string[],
-    aboutGig: "",
-    whyWorkWithMe: "",
-
-    // Packages
-    basicPrice: "10",
-    basicTitle: "Small Building Evacuation Plan",
-    basicDesc: "Single Floor • Up to 1,000 sq. ft. Ideal for small offices...",
-    basicDelivery: "1 Day Delivery",
-
-    standardPrice: "25",
-    standardTitle: "Medium Building Evacuation Plan",
-    standardDesc: "Up to 2 Floors • Up to 2,500 sq. ft...",
-    standardDelivery: "2 Day Delivery",
-
-    premiumPrice: "50",
-    premiumTitle: "Large Complex Evacuation Plan",
-    premiumDesc: "Multi-story / Large Factory • Up to 5,000 sq. ft...",
-    premiumDelivery: "3 Day Delivery",
-
-    // Seller Info
-    sellerName: "Sabbir Hossain",
-    sellerRole: "Service provider",
-    sellerImage: "",
-    sellerBio: "",
-
-    // Dynamic FAQs
-    faqs: [
-      { question: "Do you offer assistance after completion?", answer: "Yes, we provide post-delivery assistance." },
-    ],
-  });
-
-  const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || "eps_preset";
-
-  // Safe Cloudinary Success Handlers
-  const handleMainImageUpload = (result: CloudinaryUploadWidgetResults) => {
-    if (result?.info && typeof result.info !== "string" && result.info.secure_url) {
-      const url = result.info.secure_url;
-      setFormData((prev) => ({ ...prev, mainImage: url }));
-    }
+  const getCloudinaryUrl = (result: CloudinaryUploadWidgetResults): string | null => {
+    if (!result?.info || typeof result.info === "string") return null;
+    return "secure_url" in result.info ? result.info.secure_url || null : null;
   };
 
-  const handleGigGalleryImageUpload = (result: CloudinaryUploadWidgetResults, index: number) => {
-    if (result?.info && typeof result.info !== "string" && result.info.secure_url) {
-      const url = result.info.secure_url;
-      setFormData((prev) => {
-        const updated = [...prev.gigGalleryImages];
-        updated[index] = url;
-        return { ...prev, gigGalleryImages: updated };
-      });
-    }
+  const fetchServices = async () => {
+    try {
+      setIsLoading(true);
+      const res = await fetch("/api/services", { cache: "no-store" });
+      const data = await res.json();
+      if (res.ok && data.success) setServices(data.services || []);
+      else alert(data.message || "Failed to load services");
+    } catch (error) {
+      console.error("FETCH SERVICES ERROR:", error);
+      alert("Failed to load services");
+    } finally { setIsLoading(false); }
   };
 
-  const handleRecentWorksUpload = (result: CloudinaryUploadWidgetResults, index: number) => {
-    if (result?.info && typeof result.info !== "string" && result.info.secure_url) {
-      const url = result.info.secure_url;
-      setFormData((prev) => {
-        const updated = [...prev.recentWorks];
-        updated[index] = url;
-        return { ...prev, recentWorks: updated };
-      });
-    }
-  };
+  useEffect(() => { fetchServices(); }, []);
 
-  // Handle Gig Gallery Image Addition & Updates
-  const handleAddGigGalleryImage = () => {
-    setFormData((prev) => ({
-      ...prev,
-      gigGalleryImages: [...prev.gigGalleryImages, ""],
-    }));
+  /* Generic update helpers */
+  const updateField = (key: keyof FormData, value: any) => setFormData(prev => ({ ...prev, [key]: value }));
+  const updatePackage = (type: "basic" | "standard" | "premium", field: string, value: string) => {
+    setFormData(prev => ({ ...prev, packages: { ...prev.packages, [type]: { ...prev.packages[type], [field]: value } } }));
   };
-
-  const handleGigGalleryImageChange = (index: number, value: string) => {
-    setFormData((prev) => {
-      const updated = [...prev.gigGalleryImages];
-      updated[index] = value;
-      return { ...prev, gigGalleryImages: updated };
+  const updateArrayItem = (key: "gigGalleryImages" | "recentWorks", index: number, value: string) => {
+    setFormData(prev => {
+      const arr = [...prev[key]]; arr[index] = value;
+      return { ...prev, [key]: arr };
     });
   };
-
-  const handleRemoveGigGalleryImage = (index: number) => {
-    setFormData((prev) => ({
-      ...prev,
-      gigGalleryImages: prev.gigGalleryImages.filter((_, i) => i !== index),
-    }));
+  const addArrayItem = (key: "gigGalleryImages" | "recentWorks") => {
+    setFormData(prev => ({ ...prev, [key]: [...prev[key], ""] }));
   };
-
-  // Recent Works Handlers
-  const handleAddRecentWorks = () => {
-    setFormData((prev) => ({
-      ...prev,
-      recentWorks: [...prev.recentWorks, ""],
-    }));
+  const removeArrayItem = (key: "gigGalleryImages" | "recentWorks", index: number) => {
+    setFormData(prev => ({ ...prev, [key]: prev[key].filter((_, i) => i !== index) }));
   };
-
-  const handleRecentWorksChange = (index: number, value: string) => {
-    setFormData((prev) => {
-      const updated = [...prev.recentWorks];
-      updated[index] = value;
-      return { ...prev, recentWorks: updated };
+  const updateFaq = (index: number, field: "question" | "answer", value: string) => {
+    setFormData(prev => {
+      const faqs = [...prev.faqs]; faqs[index] = { ...faqs[index], [field]: value };
+      return { ...prev, faqs };
     });
   };
+  const addFaq = () => setFormData(prev => ({ ...prev, faqs: [...prev.faqs, { question: "", answer: "" }] }));
+  const removeFaq = (index: number) => setFormData(prev => ({ ...prev, faqs: prev.faqs.filter((_, i) => i !== index) }));
 
-  const handleRemoveRecentWorks = (index: number) => {
-    setFormData((prev) => ({
-      ...prev,
-      recentWorks: prev.recentWorks.filter((_, i) => i !== index),
-    }));
+  const resetForm = () => {
+    setFormData({ ...initialFormData, gigGalleryImages: [""], recentWorks: [""], faqs: [{ question: "Do you offer assistance after completion?", answer: "Yes, we provide post-delivery assistance." }] });
+    setEditingId(null);
   };
 
-  // FAQ Handlers
-  const handleAddFaq = () => {
-    setFormData((prev) => ({
-      ...prev,
-      faqs: [...prev.faqs, { question: "", answer: "" }],
-    }));
-  };
-
-  const handleFaqChange = (index: number, field: "question" | "answer", value: string) => {
-    setFormData((prev) => {
-      const updated = [...prev.faqs];
-      updated[index][field] = value;
-      return { ...prev, faqs: updated };
+  const handleEdit = (service: Service) => {
+    setEditingId(service._id);
+    setFormData({
+      title: service.title || "", rating: service.rating || "5.0", reviewsCount: service.reviewsCount || "0",
+      mainImage: service.mainImage || "", gigGalleryImages: service.galleryImages?.length ? service.galleryImages : [""],
+      recentWorks: service.recentWorks?.length ? service.recentWorks : [""],
+      aboutGig: service.aboutGig || "", whyWorkWithMe: service.whyWorkWithMe || "",
+      packages: {
+        basic: service.basicPackage || {}, standard: service.standardPackage || {}, premium: service.premiumPackage || {},
+      },
+      sellerName: service.sellerName || "", sellerRole: service.sellerRole || "", sellerImage: service.sellerImage || "", sellerBio: service.sellerBio || "",
+      faqs: service.faqs?.length ? service.faqs.map(f => ({ question: f.question || "", answer: f.answer || "" })) : [{ question: "", answer: "" }],
     });
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const handleRemoveFaq = (index: number) => {
-    setFormData((prev) => ({
-      ...prev,
-      faqs: prev.faqs.filter((_, i) => i !== index),
-    }));
+  const handleDelete = async (id: string) => {
+    if (!window.confirm("Are you sure you want to delete this service?")) return;
+    try {
+      setDeletingId(id);
+      const res = await fetch(`/api/services/${id}`, { method: "DELETE" });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setServices(prev => prev.filter(s => s._id !== id));
+        if (editingId === id) resetForm();
+        alert("Service deleted successfully!");
+      } else alert(data.message || "Failed to delete service");
+    } catch (error) {
+      console.error("DELETE SERVICE ERROR:", error);
+      alert("Something went wrong while deleting.");
+    } finally { setDeletingId(null); }
   };
 
-  // Handle Submit
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-
-    if (!formData.mainImage) {
-      alert("Please upload or provide a Main Cover Image.");
+    if (!formData.title.trim() || !formData.mainImage.trim() || !formData.aboutGig.trim()) {
+      alert("Please fill all required fields (Title, Main Image, About).");
       return;
     }
-
-    setIsSubmitting(true);
-
     try {
-      const res = await fetch("/api/services", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
-      });
-
-      if (res.ok) {
-        alert("Service created successfully!");
-      } else {
-        alert("Failed to create service.");
-      }
-    } catch (err) {
-      console.error("Error creating service:", err);
-    } finally {
-      setIsSubmitting(false);
-    }
+      setIsSubmitting(true);
+      const url = editingId ? `/api/services/${editingId}` : "/api/services";
+      const method = editingId ? "PUT" : "POST";
+      const payload = {
+        ...formData,
+        galleryImages: formData.gigGalleryImages.filter(i => i.trim() !== ""),
+        recentWorks: formData.recentWorks.filter(i => i.trim() !== ""),
+        faqs: formData.faqs.filter(f => f.question.trim() !== "" || f.answer.trim() !== ""),
+      };
+      const res = await fetch(url, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+      const data = await res.json();
+      if (!res.ok || !data.success) { alert(data.message || "Failed to save service."); return; }
+      alert(editingId ? "Service updated successfully!" : "Service created successfully!");
+      resetForm(); await fetchServices();
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } catch (error) {
+      console.error("SAVE SERVICE ERROR:", error);
+      alert("Something went wrong.");
+    } finally { setIsSubmitting(false); }
   };
 
   return (
-    <div className="p-4 md:p-8 max-w-5xl mx-auto space-y-8 text-slate-100">
-      {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-white flex items-center gap-2">
-          <PackagePlus className="w-6 h-6 text-[#006A4E]" /> Add New Service Detail
-        </h1>
-        <p className="text-xs text-slate-400 mt-1">
-          Fill in the details below to publish a new gig page.
-        </p>
-      </div>
-
-      <form onSubmit={handleSubmit} className="space-y-8">
-        {/* 1. Basic Info */}
-        <div className="bg-slate-900/80 p-6 rounded-2xl border border-slate-800 space-y-4">
-          <h2 className="text-base font-semibold text-white border-b border-slate-800 pb-2">
-            1. Basic Information
-          </h2>
-
+    <div className="min-h-screen bg-slate-950 text-slate-100 p-4 md:p-8">
+      <div className="max-w-6xl mx-auto space-y-10">
+        {/* Header */}
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
-            <label className="block text-xs font-medium text-slate-300 mb-1">
-              Gig Title *
-            </label>
-            <input
-              type="text"
-              placeholder="e.g. We will design professional fire emergency evacuation plan..."
-              value={formData.title}
-              onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-              className="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-4 py-2.5 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-[#006A4E]"
-              required
-            />
+            <h1 className="text-2xl md:text-3xl font-bold text-white flex items-center gap-2">
+              <PackagePlus className="w-7 h-7 text-emerald-500" />
+              {editingId ? "Update Service" : "Service Management"}
+            </h1>
+            <p className="text-sm text-slate-400 mt-1">Create, update and manage all your services.</p>
           </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs font-medium text-slate-300 mb-1">
-                Rating
-              </label>
-              <input
-                type="text"
-                placeholder="5.0"
-                value={formData.rating}
-                onChange={(e) => setFormData({ ...formData, rating: e.target.value })}
-                className="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-4 py-2.5 text-sm text-slate-100 focus:outline-none focus:border-[#006A4E]"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-slate-300 mb-1">
-                Reviews Count
-              </label>
-              <input
-                type="text"
-                placeholder="40"
-                value={formData.reviewsCount}
-                onChange={(e) => setFormData({ ...formData, reviewsCount: e.target.value })}
-                className="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-4 py-2.5 text-sm text-slate-100 focus:outline-none focus:border-[#006A4E]"
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* 2. Media & Gallery */}
-        <div className="bg-slate-900/80 p-6 rounded-2xl border border-slate-800 space-y-6">
-          <h2 className="text-base font-semibold text-white border-b border-slate-800 pb-2 flex items-center justify-between">
-            <span>2. Media & Gallery</span>
-            <button
-              type="button"
-              onClick={handleAddGigGalleryImage}
-              className="text-xs text-[#006A4E] hover:underline flex items-center gap-1 font-medium"
-            >
-              <Plus className="w-3.5 h-3.5" /> Add Gig Gallery Image Field
+          {editingId && (
+            <button type="button" onClick={resetForm} className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-sm transition">
+              <X className="w-4 h-4" /> Cancel Edit
             </button>
-          </h2>
+          )}
+        </div>
 
-          {/* Main Cover Image Upload */}
-          <div className="space-y-2">
-            <label className="block text-xs font-medium text-slate-300">
-              Main Cover Image *
-            </label>
-
-            <div className="flex flex-col sm:flex-row items-center gap-3">
-              <input
-                type="text"
-                placeholder="Image URL (or use Cloudinary Upload)"
-                value={formData.mainImage}
-                onChange={(e) => setFormData({ ...formData, mainImage: e.target.value })}
-                className="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-4 py-2.5 text-xs text-slate-100 focus:outline-none focus:border-[#006A4E]"
-              />
-              <CldUploadButton
-                uploadPreset={uploadPreset}
-                onSuccess={handleMainImageUpload}
-                className="w-full sm:w-auto bg-[#006A4E] hover:bg-[#00543e] text-white px-4 py-2.5 rounded-xl text-xs font-medium transition flex items-center justify-center gap-2 whitespace-nowrap cursor-pointer"
-              >
-                <ImagePlus className="w-4 h-4" /> Upload Main Image
-              </CldUploadButton>
-            </div>
-
-            {formData.mainImage && (
-              <div className="relative w-32 h-20 rounded-xl overflow-hidden border border-slate-700 group mt-2">
-                <Image
-                  src={formData.mainImage}
-                  alt="Main Preview"
-                  fill
-                  className="object-cover"
-                />
-                <button
-                  type="button"
-                  onClick={() => setFormData({ ...formData, mainImage: "" })}
-                  className="absolute top-1 right-1 bg-red-600/80 hover:bg-red-600 text-white p-1 rounded-full text-xs"
-                >
-                  <X className="w-3 h-3" />
-                </button>
+        {/* Form */}
+        <form onSubmit={handleSubmit} className="space-y-8">
+          {/* Basic Info */}
+          <div className="bg-slate-900 border border-slate-800 p-5 md:p-6 rounded-2xl">
+            <h2 className="text-lg font-semibold text-white border-b border-slate-800 pb-3 mb-5">1. Basic Information</h2>
+            <div className="space-y-4">
+              <input type="text" value={formData.title} onChange={(e) => updateField("title", e.target.value)} placeholder="Gig Title *" className="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-sm outline-none focus:border-emerald-500" required />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <input type="text" value={formData.rating} onChange={(e) => updateField("rating", e.target.value)} placeholder="Rating" className="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-sm outline-none focus:border-emerald-500" />
+                <input type="text" value={formData.reviewsCount} onChange={(e) => updateField("reviewsCount", e.target.value)} placeholder="Reviews Count" className="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-sm outline-none focus:border-emerald-500" />
               </div>
-            )}
+            </div>
           </div>
 
-          {/* Gig Gallery Images Upload */}
-          <div className="space-y-3 pt-2 border-t border-slate-800">
-            <label className="block text-xs font-medium text-slate-300">
-              Gig Gallery Images
-            </label>
-            {formData.gigGalleryImages.map((img, idx) => (
-              <div key={idx} className="space-y-2">
-                <div className="flex items-center gap-2">
-                  <input
-                    type="text"
-                    placeholder={`Gig Gallery Image ${idx + 1} URL`}
-                    value={img}
-                    onChange={(e) => handleGigGalleryImageChange(idx, e.target.value)}
-                    className="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-4 py-2 text-xs text-slate-100 focus:outline-none focus:border-[#006A4E]"
-                  />
-                  <CldUploadButton
-                    uploadPreset={uploadPreset}
-                    onSuccess={(result) => handleGigGalleryImageUpload(result, idx)}
-                    className="bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-2 rounded-xl text-xs font-medium transition flex items-center gap-1 cursor-pointer whitespace-nowrap"
-                  >
-                    <ImagePlus className="w-3.5 h-3.5" /> Upload
-                  </CldUploadButton>
+          {/* Media */}
+          <div className="bg-slate-900 border border-slate-800 p-5 md:p-6 rounded-2xl space-y-6">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 border-b border-slate-800 pb-3">
+              <h2 className="text-lg font-semibold text-white">2. Media & Gallery</h2>
+              <button type="button" onClick={() => addArrayItem("gigGalleryImages")} className="flex items-center gap-1 text-xs text-emerald-400 hover:text-emerald-300"><Plus className="w-4 h-4" /> Add Gallery Image</button>
+            </div>
 
-                  {formData.gigGalleryImages.length > 1 && (
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveGigGalleryImage(idx)}
-                      className="p-2 text-rose-400 hover:bg-rose-500/10 rounded-lg"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  )}
-                </div>
+            <ImageInput label="Main Cover Image *" value={formData.mainImage} onValueChange={(v) => updateField("mainImage", v)} onUpload={(r) => { const url = getCloudinaryUrl(r); if (url) updateField("mainImage", url); }} onRemove={() => updateField("mainImage", "")} />
 
-                {img && (
-                  <div className="relative w-24 h-16 rounded-lg overflow-hidden border border-slate-700">
-                    <Image
-                      src={img}
-                      alt={`Gig Gallery ${idx + 1}`}
-                      fill
-                      className="object-cover"
-                    />
+            <div className="border-t border-slate-800 pt-5">
+              <label className="block text-xs text-slate-300 mb-3">Gig Gallery Images</label>
+              <div className="space-y-3">
+                {formData.gigGalleryImages.map((img, idx) => (
+                  <div key={idx} className="flex flex-col md:flex-row gap-2">
+                    <input type="text" value={img} onChange={(e) => updateArrayItem("gigGalleryImages", idx, e.target.value)} placeholder={`Gallery Image ${idx + 1} URL`} className="flex-1 bg-slate-950 border border-slate-700 rounded-xl px-4 py-2.5 text-xs outline-none focus:border-emerald-500" />
+                    <CldUploadButton uploadPreset={uploadPreset} onSuccess={(r) => { const url = getCloudinaryUrl(r); if (url) updateArrayItem("gigGalleryImages", idx, url); }} className="bg-slate-800 hover:bg-slate-700 px-4 py-2.5 rounded-xl text-xs flex items-center justify-center gap-1"><ImagePlus className="w-3.5 h-3.5" /> Upload</CldUploadButton>
+                    {formData.gigGalleryImages.length > 1 && <button type="button" onClick={() => removeArrayItem("gigGalleryImages", idx)} className="p-2.5 text-red-400 hover:bg-red-500/10 rounded-xl"><Trash2 className="w-4 h-4" /></button>}
                   </div>
-                )}
+                ))}
               </div>
-            ))}
-          </div>
-
-          {/* Relevant Image  */}
-          <div className="space-y-3 pt-2 border-t border-slate-800">
-            <div className="flex items-center justify-between">
-              <label className="block text-xs font-medium text-slate-300">
-                Relevant Image
-              </label>
-              <button
-                type="button"
-                onClick={handleAddRecentWorks}
-                className="text-xs text-[#006A4E] hover:underline flex items-center gap-1 font-medium"
-              >
-                <Plus className="w-3.5 h-3.5" /> Add Recent Project Image
-              </button>
             </div>
-            
-            {formData.recentWorks.map((img, idx) => (
-              <div key={idx} className="space-y-2">
-                <div className="flex items-center gap-2">
-                  <input
-                    type="text"
-                    placeholder={`Recent Project Image ${idx + 1} URL`}
-                    value={img}
-                    onChange={(e) => handleRecentWorksChange(idx, e.target.value)}
-                    className="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-4 py-2 text-xs text-slate-100 focus:outline-none focus:border-[#006A4E]"
-                  />
-                  <CldUploadButton
-                    uploadPreset={uploadPreset}
-                    onSuccess={(result) => handleRecentWorksUpload(result, idx)}
-                    className="bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-2 rounded-xl text-xs font-medium transition flex items-center gap-1 cursor-pointer whitespace-nowrap"
-                  >
-                    <ImagePlus className="w-3.5 h-3.5" /> Upload
-                  </CldUploadButton>
 
-                  {formData.recentWorks.length > 1 && (
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveRecentWorks(idx)}
-                      className="p-2 text-rose-400 hover:bg-rose-500/10 rounded-lg"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  )}
-                </div>
-
-                {img && (
-                  <div className="relative w-24 h-16 rounded-lg overflow-hidden border border-slate-700">
-                    <Image
-                      src={img}
-                      alt={`Recent Project ${idx + 1}`}
-                      fill
-                      className="object-cover"
-                    />
+            <div className="border-t border-slate-800 pt-5">
+              <div className="flex items-center justify-between mb-3">
+                <label className="text-xs text-slate-300">Recent Project Images</label>
+                <button type="button" onClick={() => addArrayItem("recentWorks")} className="text-xs text-emerald-400 flex items-center gap-1"><Plus className="w-3.5 h-3.5" /> Add Image</button>
+              </div>
+              <div className="space-y-3">
+                {formData.recentWorks.map((img, idx) => (
+                  <div key={idx} className="flex flex-col md:flex-row gap-2">
+                    <input type="text" value={img} onChange={(e) => updateArrayItem("recentWorks", idx, e.target.value)} placeholder={`Recent Work ${idx + 1} URL`} className="flex-1 bg-slate-950 border border-slate-700 rounded-xl px-4 py-2.5 text-xs outline-none focus:border-emerald-500" />
+                    <CldUploadButton uploadPreset={uploadPreset} onSuccess={(r) => { const url = getCloudinaryUrl(r); if (url) updateArrayItem("recentWorks", idx, url); }} className="bg-slate-800 hover:bg-slate-700 px-4 py-2.5 rounded-xl text-xs flex items-center justify-center gap-1"><ImagePlus className="w-3.5 h-3.5" /> Upload</CldUploadButton>
+                    {formData.recentWorks.length > 1 && <button type="button" onClick={() => removeArrayItem("recentWorks", idx)} className="p-2.5 text-red-400 hover:bg-red-500/10 rounded-xl"><Trash2 className="w-4 h-4" /></button>}
                   </div>
-                )}
+                ))}
               </div>
-            ))}
-          </div>
-        </div>
-
-        {/* 3. Package Pricing */}
-        <div className="bg-slate-900/80 p-6 rounded-2xl border border-slate-800 space-y-6">
-          <h2 className="text-base font-semibold text-white border-b border-slate-800 pb-2">
-            3. Packages Setup
-          </h2>
-
-          {/* Basic Package */}
-          <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-3">
-            <h3 className="text-xs font-bold text-emerald-400 uppercase tracking-wider">
-              Basic Package
-            </h3>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <input
-                type="text"
-                placeholder="Price ($10)"
-                value={formData.basicPrice}
-                onChange={(e) => setFormData({ ...formData, basicPrice: e.target.value })}
-                className="bg-slate-900 border border-slate-800 rounded-lg p-2 text-xs text-white"
-              />
-              <input
-                type="text"
-                placeholder="Title"
-                value={formData.basicTitle}
-                onChange={(e) => setFormData({ ...formData, basicTitle: e.target.value })}
-                className="bg-slate-900 border border-slate-800 rounded-lg p-2 text-xs text-white sm:col-span-2"
-              />
             </div>
-            <textarea
-              placeholder="Description..."
-              value={formData.basicDesc}
-              onChange={(e) => setFormData({ ...formData, basicDesc: e.target.value })}
-              className="w-full bg-slate-900 border border-slate-800 rounded-lg p-2 text-xs text-white h-16"
-            />
           </div>
 
-          {/* Standard Package */}
-          <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-3">
-            <h3 className="text-xs font-bold text-amber-400 uppercase tracking-wider">
-              Standard Package
-            </h3>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <input
-                type="text"
-                placeholder="Price ($25)"
-                value={formData.standardPrice}
-                onChange={(e) => setFormData({ ...formData, standardPrice: e.target.value })}
-                className="bg-slate-900 border border-slate-800 rounded-lg p-2 text-xs text-white"
-              />
-              <input
-                type="text"
-                placeholder="Title"
-                value={formData.standardTitle}
-                onChange={(e) => setFormData({ ...formData, standardTitle: e.target.value })}
-                className="bg-slate-900 border border-slate-800 rounded-lg p-2 text-xs text-white sm:col-span-2"
-              />
-            </div>
-            <textarea
-              placeholder="Description..."
-              value={formData.standardDesc}
-              onChange={(e) => setFormData({ ...formData, standardDesc: e.target.value })}
-              className="w-full bg-slate-900 border border-slate-800 rounded-lg p-2 text-xs text-white h-16"
-            />
-          </div>
-        </div>
-
-        {/* 4. Details & FAQs */}
-        <div className="bg-slate-900/80 p-6 rounded-2xl border border-slate-800 space-y-4">
-          <h2 className="text-base font-semibold text-white border-b border-slate-800 pb-2">
-            4. Details & FAQs
-          </h2>
-
-          <div>
-            <label className="block text-xs font-medium text-slate-300 mb-1">
-              About this Gig
-            </label>
-            <textarea
-              rows={4}
-              placeholder="Detailed description of the service..."
-              value={formData.aboutGig}
-              onChange={(e) => setFormData({ ...formData, aboutGig: e.target.value })}
-              className="w-full bg-slate-950 border border-slate-700/80 rounded-xl p-3 text-xs text-slate-100 focus:outline-none focus:border-[#006A4E]"
-            />
+          {/* Packages */}
+          <div className="bg-slate-900 border border-slate-800 p-5 md:p-6 rounded-2xl space-y-5">
+            <h2 className="text-lg font-semibold text-white border-b border-slate-800 pb-3">3. Packages Setup</h2>
+            <PackageCard label="Basic Package" color="text-emerald-400" data={formData.packages.basic} onChange={(f, v) => updatePackage("basic", f, v)} />
+            <PackageCard label="Standard Package" color="text-amber-400" data={formData.packages.standard} onChange={(f, v) => updatePackage("standard", f, v)} />
+            <PackageCard label="Premium Package" color="text-purple-400" data={formData.packages.premium} onChange={(f, v) => updatePackage("premium", f, v)} />
           </div>
 
-          {/* Dynamic FAQs */}
-          <div className="pt-4 space-y-3">
-            <div className="flex items-center justify-between">
-              <label className="block text-xs font-medium text-slate-300 flex items-center gap-1">
-                <HelpCircle className="w-3.5 h-3.5" /> Frequently Asked Questions (FAQ)
-              </label>
-              <button
-                type="button"
-                onClick={handleAddFaq}
-                className="text-xs text-[#006A4E] hover:underline flex items-center gap-1"
-              >
-                <Plus className="w-3.5 h-3.5" /> Add FAQ
-              </button>
-            </div>
+          {/* Details & FAQs */}
+          <div className="bg-slate-900 border border-slate-800 p-5 md:p-6 rounded-2xl space-y-5">
+            <h2 className="text-lg font-semibold text-white border-b border-slate-800 pb-3">4. Details & FAQs</h2>
+            <textarea rows={6} value={formData.aboutGig} onChange={(e) => updateField("aboutGig", e.target.value)} placeholder="About this Gig *" className="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-sm outline-none focus:border-emerald-500" required />
+            <textarea rows={4} value={formData.whyWorkWithMe} onChange={(e) => updateField("whyWorkWithMe", e.target.value)} placeholder="Why Work With Me" className="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-sm outline-none focus:border-emerald-500" />
 
-            {formData.faqs.map((faq, idx) => (
-              <div
-                key={idx}
-                className="bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-2 relative"
-              >
-                <input
-                  type="text"
-                  placeholder="Question..."
-                  value={faq.question}
-                  onChange={(e) => handleFaqChange(idx, "question", e.target.value)}
-                  className="w-full bg-slate-900 border border-slate-800 rounded-lg p-2 text-xs text-white"
-                />
-                <textarea
-                  placeholder="Answer..."
-                  value={faq.answer}
-                  onChange={(e) => handleFaqChange(idx, "answer", e.target.value)}
-                  className="w-full bg-slate-900 border border-slate-800 rounded-lg p-2 text-xs text-white h-14"
-                />
-                {formData.faqs.length > 1 && (
-                  <button
-                    type="button"
-                    onClick={() => handleRemoveFaq(idx)}
-                    className="absolute top-2 right-2 text-rose-400 p-1 hover:bg-rose-500/10 rounded"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
-                )}
+            <div className="border-t border-slate-800 pt-5">
+              <div className="flex items-center justify-between mb-4">
+                <label className="text-sm font-medium flex items-center gap-2"><HelpCircle className="w-4 h-4 text-emerald-400" /> FAQs</label>
+                <button type="button" onClick={addFaq} className="text-xs text-emerald-400 flex items-center gap-1"><Plus className="w-4 h-4" /> Add FAQ</button>
               </div>
-            ))}
+              <div className="space-y-3">
+                {formData.faqs.map((faq, idx) => (
+                  <div key={idx} className="relative bg-slate-950 border border-slate-800 rounded-xl p-4 space-y-3">
+                    <input type="text" value={faq.question} onChange={(e) => updateFaq(idx, "question", e.target.value)} placeholder="Question..." className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs" />
+                    <textarea value={faq.answer} onChange={(e) => updateFaq(idx, "answer", e.target.value)} placeholder="Answer..." className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs min-h-20" />
+                    {formData.faqs.length > 1 && <button type="button" onClick={() => removeFaq(idx)} className="absolute top-3 right-3 text-red-400 hover:text-red-300"><Trash2 className="w-4 h-4" /></button>}
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
-        </div>
 
-        {/* Submit Button */}
-        <div className="flex justify-end">
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className="bg-[#006A4E] text-white px-8 py-3 rounded-xl font-semibold text-xs hover:bg-[#00543e] transition flex items-center gap-2 shadow-lg disabled:opacity-50 cursor-pointer"
-          >
-            {isSubmitting ? (
-              <>
-                <Loader2 className="w-4 h-4 animate-spin" /> Saving Service...
-              </>
-            ) : (
-              <>Publish Service</>
-            )}
-          </button>
-        </div>
-      </form>
+          {/* Seller */}
+          <div className="bg-slate-900 border border-slate-800 p-5 md:p-6 rounded-2xl space-y-5">
+            <h2 className="text-lg font-semibold text-white border-b border-slate-800 pb-3">5. Seller Information</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <input type="text" value={formData.sellerName} onChange={(e) => updateField("sellerName", e.target.value)} placeholder="Seller Name" className="bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-xs" />
+              <input type="text" value={formData.sellerRole} onChange={(e) => updateField("sellerRole", e.target.value)} placeholder="Seller Role" className="bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-xs" />
+            </div>
+            <ImageInput label="Seller Image" value={formData.sellerImage} onValueChange={(v) => updateField("sellerImage", v)} onUpload={(r) => { const url = getCloudinaryUrl(r); if (url) updateField("sellerImage", url); }} onRemove={() => updateField("sellerImage", "")} />
+            <textarea rows={4} value={formData.sellerBio} onChange={(e) => updateField("sellerBio", e.target.value)} placeholder="Seller Bio" className="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-xs" />
+          </div>
+
+          {/* Submit */}
+          <div className="flex flex-col md:flex-row justify-end gap-3">
+            {editingId && <button type="button" onClick={resetForm} className="px-7 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-sm">Cancel</button>}
+            <button type="submit" disabled={isSubmitting} className="bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 px-8 py-3 rounded-xl font-semibold text-sm flex items-center justify-center gap-2">
+              {isSubmitting ? <><Loader2 className="w-4 h-4 animate-spin" /> {editingId ? "Updating..." : "Publishing..."}</> : <>{editingId ? <><RefreshCw className="w-4 h-4" /> Update Service</> : <><Plus className="w-4 h-4" /> Publish Service</>}</>}
+            </button>
+          </div>
+        </form>
+
+        {/* Service List */}
+        <section className="pt-8">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-5">
+            <div>
+              <h2 className="text-xl font-bold text-white">Your Services</h2>
+              <p className="text-xs text-slate-400 mt-1">{services.length} service{services.length !== 1 ? "s" : ""} available</p>
+            </div>
+            <button type="button" onClick={fetchServices} className="flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-700 px-4 py-2.5 rounded-xl text-xs"><RefreshCw className="w-4 h-4" /> Refresh</button>
+          </div>
+
+          {isLoading ? (
+            <div className="flex justify-center py-20"><Loader2 className="w-8 h-8 animate-spin text-emerald-500" /></div>
+          ) : services.length === 0 ? (
+            <div className="text-center py-20 border border-dashed border-slate-800 rounded-2xl">
+              <Package className="w-10 h-10 mx-auto text-slate-600 mb-3" />
+              <p className="text-slate-400">No services found.</p>
+              <p className="text-xs text-slate-600 mt-1">Create your first service above.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+              {services.map((service) => (
+                <div key={service._id} className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden hover:border-slate-700 transition">
+                  <div className="relative aspect-video bg-slate-950">
+                    {service.mainImage ? <Image src={service.mainImage} alt={service.title} fill className="object-cover" sizes="(max-width: 768px) 100vw, 33vw" /> : <div className="flex items-center justify-center h-full text-slate-600">No Image</div>}
+                    <div className="absolute top-3 left-3 bg-slate-950/80 backdrop-blur px-2.5 py-1 rounded-lg text-xs flex items-center gap-1"><Star className="w-3 h-3 fill-yellow-400 text-yellow-400" /> {service.rating || "5.0"}</div>
+                  </div>
+                  <div className="p-4">
+                    <h3 className="text-sm font-semibold text-white line-clamp-2 min-h-10">{service.title}</h3>
+                    <div className="flex items-center justify-between mt-3">
+                      <span className="text-xs text-slate-400">{service.reviewsCount || "0"} reviews</span>
+                      <span className="text-emerald-400 font-semibold text-sm">${service.basicPackage?.price || "0"}</span>
+                    </div>
+                    <div className="flex items-center gap-4 mt-3 text-xs text-slate-500">
+                      <span>{service.galleryImages?.length || 0} gallery</span>
+                      <span>{service.recentWorks?.length || 0} projects</span>
+                      <span>{service.faqs?.length || 0} FAQs</span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2 mt-4">
+                      <button type="button" onClick={() => handleEdit(service)} className="flex items-center justify-center gap-2 bg-emerald-600/10 hover:bg-emerald-600 text-emerald-400 hover:text-white border border-emerald-600/20 px-3 py-2.5 rounded-xl text-xs font-medium transition"><Pencil className="w-3.5 h-3.5" /> Edit</button>
+                      <button type="button" disabled={deletingId === service._id} onClick={() => handleDelete(service._id)} className="flex items-center justify-center gap-2 bg-red-600/10 hover:bg-red-600 text-red-400 hover:text-white border border-red-600/20 px-3 py-2.5 rounded-xl text-xs font-medium transition disabled:opacity-50">
+                        {deletingId === service._id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />} Delete
+                      </button>
+                    </div>
+                    <button type="button" onClick={() => window.open(`/services/${service._id}`, "_blank")} className="w-full mt-2 flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-2.5 rounded-xl text-xs transition"><Eye className="w-3.5 h-3.5" /> View Service</button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+      </div>
     </div>
   );
 }

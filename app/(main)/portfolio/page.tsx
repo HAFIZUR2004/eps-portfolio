@@ -125,19 +125,26 @@ export default function PortfolioPage() {
                 key={item._id}
                 className="bg-white rounded-2xl border border-gray-200/80 overflow-hidden shadow-sm hover:shadow-md transition-all cursor-pointer group"
               >
-                <div
-                  className={`relative w-full bg-gray-100 ${
-                    item.orientation === "landscape" ? "h-64 sm:h-72" : "h-96 sm:h-[480px]"
-                  }`}
-                >
-                  <Image
-                    src={item.imageUrl}
-                    alt={item.title}
-                    fill
-                    unoptimized
-                    className="object-cover group-hover:scale-105 transition-transform duration-300"
-                  />
-                </div>
+               <div className="relative w-full aspect-[1.414/1] overflow-hidden bg-gradient-to-br from-slate-100 via-white to-slate-100">
+  <Image
+    src={item.imageUrl}
+    alt={item.title}
+    fill
+    unoptimized
+    className="
+      object-contain
+      p-2
+      transition-transform
+      duration-500
+      ease-out
+      group-hover:scale-[1.03]
+    "
+    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+  />
+</div>
+
+
+                
               </div>
             ))}
           </div>

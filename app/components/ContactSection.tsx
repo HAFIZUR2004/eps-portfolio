@@ -1,11 +1,14 @@
 "use client";
 
 import React, { useState, ChangeEvent, FormEvent } from "react";
-import { MessageSquare, Mail, Globe, Check, Send, Loader2, MessageCircle } from "lucide-react";
+import { Check, Send, Loader2 } from "lucide-react";
+import { FaWhatsapp } from "react-icons/fa";
+import { MdEmail, MdPublic } from "react-icons/md";
 import toast, { Toaster } from "react-hot-toast";
+import { countries } from "@/lib/countries"; // ✅ Countries import
 
 // ==============================================
-// 1. TypeScript Definitions (Fixes the 'never' type error)
+// 1. TypeScript Definitions
 // ==============================================
 interface FormData {
   fullName: string;
@@ -23,7 +26,7 @@ const whyContactUsList: string[] = ["Fiverr marketplace Level 2 seller", "24-Hou
 
 export default function ContactPage() {
   // ==============================================
-  // 2. State with explicit Types
+  // 2. State
   // ==============================================
   const [form, setForm] = useState<FormData>({ 
     fullName: "", 
@@ -38,7 +41,7 @@ export default function ContactPage() {
   const [loading, setLoading] = useState<boolean>(false);
 
   // ==============================================
-  // 3. Handlers with exact Types (Fixes 'implicit any' errors)
+  // 3. Handlers
   // ==============================================
   const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -62,7 +65,7 @@ export default function ContactPage() {
   };
 
   // ==============================================
-  // 4. Submit Logic with file conversion
+  // 4. Submit Logic
   // ==============================================
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -72,11 +75,10 @@ export default function ContactPage() {
     try {
       let fileData = null;
       if (form.file) {
-        // Fix for 'Argument of type null is not assignable to Blob'
         const base64 = await new Promise<string>((resolve) => {
           const reader = new FileReader();
           reader.onload = () => resolve(reader.result as string);
-          reader.readAsDataURL(form.file as Blob); // Type assertion
+          reader.readAsDataURL(form.file as Blob);
         });
         fileData = { name: form.file.name, base64 };
       }
@@ -93,7 +95,6 @@ export default function ContactPage() {
         setForm({ fullName: "", whatsapp: "", country: "", buildingType: "", message: "", services: [], file: null });
         setFileName("");
         
-        // Fix for 'Object is possibly null' & 'Property value does not exist'
         const fileInput = document.getElementById("floorPlanFile") as HTMLInputElement | null;
         if (fileInput) {
           fileInput.value = "";
@@ -138,11 +139,12 @@ export default function ContactPage() {
                 <p className="text-sm text-gray-500 mt-1">Upload your floor plan and receive a customized quote within 24 hours.</p>
               </div>
 
+              {/* সবুজ আইকন সহ Contact Cards */}
               <div className="space-y-3">
                 {[
-                  { icon: <MessageSquare className="w-5 h-5" />, color: "bg-emerald-100 text-emerald-600", title: "WhatsApp Us", desc: "Available 24 hours", link: "https://wa.me/8801884369340" },
-                  { icon: <Mail className="w-5 h-5" />, color: "bg-blue-100 text-blue-600", title: "Email Us", desc: "Fast Response Within 24 Hours", link: "mailto:your-email@example.com" },
-                  { icon: <Globe className="w-5 h-5" />, color: "bg-teal-100 text-teal-600", title: "Worldwide Remote Service", desc: "Serving clients across USA, Canada, UK, Australia & more", link: null }
+                  { icon: <FaWhatsapp className="w-5 h-5" />, color: "bg-emerald-100 text-emerald-600", title: "WhatsApp Us", desc: "Available 24 hours", link: "https://wa.me/8801884369340" },
+                  { icon: <MdEmail className="w-5 h-5" />, color: "bg-emerald-100 text-emerald-600", title: "Email Us", desc: "Fast Response Within 24 Hours", link: "mailto:your-email@example.com" },
+                  { icon: <MdPublic className="w-5 h-5" />, color: "bg-emerald-100 text-emerald-600", title: "Worldwide Remote Service", desc: "Serving clients across USA, Canada, UK, Australia & more", link: null }
                 ].map((item, i) => (
                   <a key={i} href={item.link || "#"} target={item.link ? "_blank" : ""} className={`bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex items-center gap-4 ${item.link ? "hover:border-emerald-200" : ""} transition-all block`}>
                     <div className={`w-10 h-10 rounded-xl ${item.color} flex items-center justify-center shrink-0`}>{item.icon}</div>
@@ -151,7 +153,8 @@ export default function ContactPage() {
                 ))}
               </div>
 
-              <div className="bg-white/80 p-5 rounded-2xl border border-emerald-100 shadow-sm max-w-sm">
+             <div className=" ">
+               <div className="bg-white/80 p-5 ml-12 rounded-2xl border border-emerald-100 shadow-sm max-w-sm">
                 <h3 className="text-xs font-bold text-emerald-700 text-center mb-3">Why Contact Us?</h3>
                 <ul className="space-y-2 text-xs text-gray-700 font-medium">
                   {whyContactUsList.map((item, idx) => (
@@ -159,6 +162,8 @@ export default function ContactPage() {
                   ))}
                 </ul>
               </div>
+             </div>
+              
             </div>
 
             {/* Right Column (Form) */}
@@ -168,7 +173,17 @@ export default function ContactPage() {
                 <div><label className="block text-xs font-bold text-gray-800 mb-1">WhatsApp</label><input name="whatsapp" type="text" value={form.whatsapp} onChange={handleChange} placeholder="WhatsApp number with country code" className="w-full px-3.5 py-2.5 text-xs rounded-lg border border-gray-200 bg-gray-50/30" /></div>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div><label className="block text-xs font-bold text-gray-800 mb-1">Country</label><select name="country" value={form.country} onChange={handleChange} className="w-full px-3.5 py-2.5 text-xs rounded-lg border border-gray-200 bg-gray-50/30"><option value="">Select Country</option><option value="US">United States</option><option value="UK">United Kingdom</option><option value="CA">Canada</option><option value="AU">Australia</option><option value="DE">Germany</option><option value="IN">India</option></select></div>
+                  <div>
+                    <label className="block text-xs font-bold text-gray-800 mb-1">Country</label>
+                    <select name="country" value={form.country} onChange={handleChange} className="w-full px-3.5 py-2.5 text-xs rounded-lg border border-gray-200 bg-gray-50/30">
+                      <option value="">Select Country</option>
+                      {countries.map((country) => (
+                        <option key={country.code} value={country.code}>
+                          {country.flag} {country.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
                   <div><label className="block text-xs font-bold text-gray-800 mb-1">Building Type</label><select name="buildingType" value={form.buildingType} onChange={handleChange} className="w-full px-3.5 py-2.5 text-xs rounded-lg border border-gray-200 bg-gray-50/30"><option value="">Select Building Type</option><option value="residential">Residential</option><option value="commercial">Commercial</option><option value="industrial">Industrial</option><option value="hospital">Hospital</option></select></div>
                 </div>
 
@@ -188,9 +203,9 @@ export default function ContactPage() {
         </div>
       </main>
 
-      {/* Floating WhatsApp Button using Lucide MessageCircle */}
+      {/* Floating WhatsApp Button */}
       <a href="https://wa.me/8801884369340" target="_blank" rel="noopener noreferrer" className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full bg-[#25D366] text-white flex items-center justify-center shadow-lg hover:scale-110 transition-all">
-        <MessageCircle className="w-7 h-7" />
+        <FaWhatsapp className="w-7 h-7" />
       </a>
     </>
   );

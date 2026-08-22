@@ -1,5 +1,8 @@
 import React from "react";
-import { FolderCheck, Clock, RefreshCw, Handshake } from "lucide-react";
+import { MdOutlineTimer } from "react-icons/md";
+import { IoDocumentAttachOutline } from "react-icons/io5";
+import { SiFiles } from "react-icons/si";
+import { Handshake } from "lucide-react";
 
 interface FeatureCard {
   number: string;
@@ -16,7 +19,7 @@ const features: FeatureCard[] = [
     title: "600+ Completed Projects",
     description:
       "Successfully completed over 500+ projects with a strong focus on quality, accuracy, and client satisfaction.",
-    icon: <FolderCheck className="w-5 h-5" />,
+    icon: <SiFiles className="w-5 h-5" />,
     iconBg: "bg-purple-100",
     iconColor: "text-purple-600",
   },
@@ -25,7 +28,7 @@ const features: FeatureCard[] = [
     title: "Fast Turnaround Time",
     description:
       "Receive your completed evacuation plan quickly without compromising on quality or attention to detail.",
-    icon: <Clock className="w-5 h-5" />,
+    icon: <MdOutlineTimer className="w-5 h-5" />,
     iconBg: "bg-red-100",
     iconColor: "text-red-500",
   },
@@ -34,7 +37,7 @@ const features: FeatureCard[] = [
     title: "Unlimited Revisions Until Approved",
     description:
       "We make revisions as needed to ensure the final plan fully meets your requirements and expectations.",
-    icon: <RefreshCw className="w-5 h-5" />,
+    icon: <IoDocumentAttachOutline className="w-5 h-5" />,
     iconBg: "bg-emerald-100",
     iconColor: "text-emerald-600",
   },
@@ -55,7 +58,6 @@ export default function WhyChooseMe() {
       <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
         
         {/* Left Side Text Content */}
-        {/* space-y-4 কমিয়ে space-y-1 / space-y-2 করা হয়েছে */}
         <div className="lg:col-span-4 space-y-1 text-left">
           
           {/* Transparent PNG Image Badge */}
